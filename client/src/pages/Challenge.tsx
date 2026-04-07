@@ -25,6 +25,7 @@ export default function ChallengePage() {
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
   const [hintIndex, setHintIndex] = useState(-1);
   const [attempts, setAttempts] = useState(0);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const [solved, setSolved] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -43,6 +44,7 @@ export default function ChallengePage() {
     setFeedback(null);
     setHintIndex(-1);
     setAttempts(0);
+    setFailedAttempts(0);
     setSolved(challengeProgress[challenge.id]?.status === 'completed');
     setTimer(0);
     setIsRunning(false);
@@ -131,10 +133,12 @@ export default function ChallengePage() {
           }
         });
       } else if (!comparison.correct) {
+        const newFailed = failedAttempts + 1;
+        setFailedAttempts(newFailed);
         submitChallenge(challenge.id, false, 0, challenge.concept);
 
         // Auto-show hint after 3 failed attempts
-        if (attempts + 1 >= 3 && hintIndex < 0) {
+        if (newFailed >= 3 && hintIndex < 0) {
           setHintIndex(0);
         }
       }
@@ -243,7 +247,7 @@ export default function ChallengePage() {
                   <Lightbulb className="w-4 h-4 text-neon-magenta" />
                   <h3 className="text-sm font-semibold text-text-primary">Dicas</h3>
                 </div>
-                {hintIndex < challenge.hints.length - 1 && (
+                {failedAttempts >= 3 && hintIndex < challenge.hints.length - 1 && (
                   <button
                     onClick={showNextHint}
                     className="text-xs text-neon-magenta hover:underline"
@@ -262,8 +266,8 @@ export default function ChallengePage() {
                 </div>
               ) : (
                 <p className="text-xs text-text-muted">
-                  {attempts < 3
-                    ? `Tente resolver primeiro! (dica disponível após ${3 - attempts} tentativa${3 - attempts !== 1 ? 's' : ''})`
+                  {failedAttempts < 3
+                    ? `Tente resolver primeiro! (dica disponível após ${3 - failedAttempts} erro${3 - failedAttempts !== 1 ? 's' : ''})`
                     : 'Clique em "Mostrar dica" para ajuda.'
                   }
                 </p>

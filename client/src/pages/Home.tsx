@@ -144,44 +144,54 @@ export default function HomePage() {
         );
         const isCollapsed = collapsed[level] ?? false;
 
-        // Hide fully locked levels
-        if (!isLevelUnlocked) return null;
-
         return (
-          <div key={level}>
-            {/* Level Header — clickable to collapse */}
+          <div key={level} className={!isLevelUnlocked ? 'opacity-50' : ''}>
+            {/* Level Header — clickable to collapse (only if unlocked) */}
             <button
-              onClick={() => toggleLevel(level)}
-              className="w-full flex items-center justify-between mb-3 group text-left"
+              onClick={() => isLevelUnlocked && toggleLevel(level)}
+              className={`w-full flex items-center justify-between mb-3 group text-left ${
+                !isLevelUnlocked ? 'cursor-default' : ''
+              }`}
             >
               <div className="flex items-center gap-3">
-                {isCollapsed ? (
+                {!isLevelUnlocked ? (
+                  <Lock className="w-5 h-5 text-text-muted" />
+                ) : isCollapsed ? (
                   <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-neon-cyan transition-colors" />
                 ) : (
                   <ChevronDown className="w-5 h-5 text-text-muted group-hover:text-neon-cyan transition-colors" />
                 )}
                 <div>
-                  <h2 className="text-lg font-semibold text-text-primary group-hover:text-neon-cyan transition-colors">
+                  <h2 className={`text-lg font-semibold transition-colors ${
+                    isLevelUnlocked ? 'text-text-primary group-hover:text-neon-cyan' : 'text-text-muted'
+                  }`}>
                     Nível {level}: {levelNames[level]}
                   </h2>
-                  <p className="text-sm text-text-secondary">{levelDescriptions[level]}</p>
+                  <p className="text-sm text-text-secondary">
+                    {isLevelUnlocked
+                      ? levelDescriptions[level]
+                      : 'Complete o boss do nível anterior para desbloquear'
+                    }
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-muted">
-                  {levelCompleted}/{levelChallenges.length}
-                </span>
-                <div className="h-1.5 w-20 bg-bg-primary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-neon-cyan rounded-full transition-all"
-                    style={{ width: `${(levelCompleted / levelChallenges.length) * 100}%` }}
-                  />
+              {isLevelUnlocked && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-muted">
+                    {levelCompleted}/{levelChallenges.length}
+                  </span>
+                  <div className="h-1.5 w-20 bg-bg-primary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-neon-cyan rounded-full transition-all"
+                      style={{ width: `${(levelCompleted / levelChallenges.length) * 100}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </button>
 
-            {/* Challenge Grid */}
-            {!isCollapsed && (
+            {/* Challenge Grid (only if unlocked and not collapsed) */}
+            {isLevelUnlocked && !isCollapsed && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {levelChallenges.map(challenge => (
                   <ChallengeCard
@@ -196,18 +206,6 @@ export default function HomePage() {
         );
       })}
 
-      {/* Locked levels teaser */}
-      {levels.some(level => {
-        const levelChallenges = getChallengesByLevel(level);
-        return !levelChallenges.some(c => challengeProgress[c.id] && challengeProgress[c.id].status !== 'locked');
-      }) && (
-        <div className="card bg-bg-secondary/50 border-white/5 flex items-center gap-3 py-4">
-          <Lock className="w-5 h-5 text-text-muted" />
-          <p className="text-sm text-text-muted">
-            Complete o boss do nível atual para desbloquear o próximo.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

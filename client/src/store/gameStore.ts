@@ -277,7 +277,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const user = get().user;
     if (!user) return { xpGained: 0, bonuses: [] };
 
-    // Update attempts
+    // Read current state BEFORE modifying
     const { data: existing } = await supabase
       .from('challenge_progress')
       .select('*')
@@ -285,9 +285,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       .eq('challenge_id', challengeId)
       .single();
 
+    // Previous attempts BEFORE this submission
+    const previousAttempts = existing ? existing.attempts : 0;
+
+    // Now increment attempts
     if (existing) {
       await supabase.from('challenge_progress').update({
-        attempts: existing.attempts + 1,
+        attempts: previousAttempts + 1,
       }).eq('user_id', user.id).eq('challenge_id', challengeId);
     } else {
       await supabase.from('challenge_progress').insert({
@@ -308,8 +312,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         const isBoss = challengeId.endsWith('-10') || challengeId.endsWith('-8');
         xpGained = isBoss ? 150 : 50;
 
-        const attempts = existing ? existing.attempts + 1 : 1;
-        if (attempts === 1) {
+        // Perfect = zero previous attempts (this is the first try)
+        if (previousAttempts === 0) {
           xpGained = Math.floor(xpGained * 1.5);
           bonuses.push('Perfect Run! +50%');
         }
@@ -459,13 +463,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           if (mission.type === 'solve_n') {
             newProgress = mission.progress + 1;
           } else if (mission.type === 'perfect') {
-            const existing2 = await supabase
-              .from('challenge_progress')
-              .select('attempts')
-              .eq('user_id', user.id)
-              .eq('challenge_id', challengeId)
-              .single();
-            if (existing2.data && existing2.data.attempts <= 1) {
+            // previousAttempts was captured before incrementing
+            if (previousAttempts === 0) {
               newProgress = mission.progress + 1;
             }
           }
