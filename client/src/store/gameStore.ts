@@ -262,6 +262,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       missions = result.data || [];
     }
 
+    // Deduplicate by type (keep only the first of each type)
+    const seen = new Set<string>();
+    missions = missions.filter(m => {
+      if (seen.has(m.type)) return false;
+      seen.add(m.type);
+      return true;
+    });
+
     set({ missions: missions as any });
   },
 
@@ -434,8 +442,48 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
+    // Update daily missions progress
+    if (correct) {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMissions } = await supabase
+        .from('daily_missions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .eq('completed', false);
+
+      if (todayMissions) {
+        for (const mission of todayMissions) {
+          let newProgress = mission.progress;
+
+          if (mission.type === 'solve_n') {
+            newProgress = mission.progress + 1;
+          } else if (mission.type === 'perfect') {
+            const existing2 = await supabase
+              .from('challenge_progress')
+              .select('attempts')
+              .eq('user_id', user.id)
+              .eq('challenge_id', challengeId)
+              .single();
+            if (existing2.data && existing2.data.attempts <= 1) {
+              newProgress = mission.progress + 1;
+            }
+          }
+
+          if (newProgress !== mission.progress) {
+            const isComplete = newProgress >= mission.target;
+            await supabase.from('daily_missions').update({
+              progress: newProgress,
+              completed: isComplete,
+            }).eq('id', mission.id);
+          }
+        }
+      }
+    }
+
     await get().fetchStats();
     await get().fetchChallengeProgress();
+    await get().fetchMissions();
     return { xpGained, bonuses };
   },
 

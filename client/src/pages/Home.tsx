@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { challenges, getChallengesByLevel, levelNames, levelDescriptions } from '../data/challenges';
 import ChallengeCard from '../components/ChallengeCard';
 import XpBar from '../components/XpBar';
 import { getRankIcon, getXpForNextLevel } from '../types';
-import { Flame, Target, Trophy, Brain, Shield, ChevronRight } from 'lucide-react';
+import { Flame, Target, Trophy, Brain, Shield, ChevronRight, ChevronDown, Lock } from 'lucide-react';
 
 export default function HomePage() {
   const { stats, challengeProgress, missions, fetchMissions } = useGameStore();
+  const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchMissions();
@@ -17,6 +18,10 @@ export default function HomePage() {
 
   const totalCompleted = Object.values(challengeProgress).filter(p => p.status === 'completed').length;
   const totalChallenges = challenges.length;
+
+  const toggleLevel = (level: number) => {
+    setCollapsed(prev => ({ ...prev, [level]: !prev[level] }));
+  };
 
   return (
     <div className="space-y-8">
@@ -112,7 +117,9 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 mt-1">
                     <div className="h-1 flex-1 bg-bg-primary rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-neon-magenta rounded-full transition-all"
+                        className={`h-full rounded-full transition-all ${
+                          m.completed ? 'bg-neon-green' : 'bg-neon-magenta'
+                        }`}
                         style={{ width: `${Math.min(100, (m.progress / m.target) * 100)}%` }}
                       />
                     </div>
@@ -135,33 +142,72 @@ export default function HomePage() {
         const isLevelUnlocked = levelChallenges.some(
           c => challengeProgress[c.id] && challengeProgress[c.id].status !== 'locked'
         );
+        const isCollapsed = collapsed[level] ?? false;
+
+        // Hide fully locked levels
+        if (!isLevelUnlocked) return null;
 
         return (
-          <div key={level} className={!isLevelUnlocked ? 'opacity-50' : ''}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-lg font-semibold text-text-primary">
-                  Nível {level}: {levelNames[level]}
-                </h2>
-                <p className="text-sm text-text-secondary">{levelDescriptions[level]}</p>
+          <div key={level}>
+            {/* Level Header — clickable to collapse */}
+            <button
+              onClick={() => toggleLevel(level)}
+              className="w-full flex items-center justify-between mb-3 group text-left"
+            >
+              <div className="flex items-center gap-3">
+                {isCollapsed ? (
+                  <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-neon-cyan transition-colors" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-text-muted group-hover:text-neon-cyan transition-colors" />
+                )}
+                <div>
+                  <h2 className="text-lg font-semibold text-text-primary group-hover:text-neon-cyan transition-colors">
+                    Nível {level}: {levelNames[level]}
+                  </h2>
+                  <p className="text-sm text-text-secondary">{levelDescriptions[level]}</p>
+                </div>
               </div>
-              <div className="text-sm text-text-muted">
-                {levelCompleted}/{levelChallenges.length} completos
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-muted">
+                  {levelCompleted}/{levelChallenges.length}
+                </span>
+                <div className="h-1.5 w-20 bg-bg-primary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-neon-cyan rounded-full transition-all"
+                    style={{ width: `${(levelCompleted / levelChallenges.length) * 100}%` }}
+                  />
+                </div>
               </div>
-            </div>
+            </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {levelChallenges.map(challenge => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  progress={challengeProgress[challenge.id]}
-                />
-              ))}
-            </div>
+            {/* Challenge Grid */}
+            {!isCollapsed && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {levelChallenges.map(challenge => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    progress={challengeProgress[challenge.id]}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
+
+      {/* Locked levels teaser */}
+      {levels.some(level => {
+        const levelChallenges = getChallengesByLevel(level);
+        return !levelChallenges.some(c => challengeProgress[c.id] && challengeProgress[c.id].status !== 'locked');
+      }) && (
+        <div className="card bg-bg-secondary/50 border-white/5 flex items-center gap-3 py-4">
+          <Lock className="w-5 h-5 text-text-muted" />
+          <p className="text-sm text-text-muted">
+            Complete o boss do nível atual para desbloquear o próximo.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
