@@ -238,7 +238,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!missions || missions.length === 0) {
       const defs = [
         { type: 'solve_n', description: 'Resolva 3 desafios hoje', target: 3, xp_reward: 100 },
-        { type: 'review', description: 'Revise 2 conceitos', target: 2, xp_reward: 75 },
+        { type: 'solve_5', description: 'Resolva 5 desafios hoje', target: 5, xp_reward: 75 },
         { type: 'perfect', description: 'Acerte 1 desafio de primeira', target: 1, xp_reward: 50 },
       ];
 
@@ -460,7 +460,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         for (const mission of todayMissions) {
           let newProgress = mission.progress;
 
-          if (mission.type === 'solve_n') {
+          if (mission.type === 'solve_n' || mission.type === 'solve_5') {
             newProgress = mission.progress + 1;
           } else if (mission.type === 'perfect') {
             // previousAttempts was captured before incrementing
