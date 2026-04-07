@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Terminal, AlertCircle } from 'lucide-react';
+import { Terminal, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -8,12 +8,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useGameStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
@@ -23,7 +25,12 @@ export default function LoginPage() {
         await login(email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao autenticar');
+      const msg = err.message || 'Erro ao autenticar';
+      if (msg.includes('Verifique') || msg.includes('Conta criada')) {
+        setSuccess(msg);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -110,6 +117,13 @@ export default function LoginPage() {
               <div className="flex items-center gap-2 text-neon-red text-sm bg-neon-red/5 rounded-lg px-3 py-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="flex items-center gap-2 text-neon-green text-sm bg-neon-green/5 rounded-lg px-3 py-2">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{success}</span>
               </div>
             )}
 
