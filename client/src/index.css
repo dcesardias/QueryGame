@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #334155 #0a0e1a;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #0a0e1a;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: rgba(0, 240, 255, 0.3);
+    color: #e2e8f0;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-neon-cyan text-bg-primary font-semibold px-6 py-2.5 rounded-lg
+           transition-all duration-200 hover:shadow-neon-cyan hover:brightness-110
+           active:scale-95 disabled:bg-surface-hover disabled:text-text-muted
+           disabled:shadow-none disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply border border-neon-cyan text-neon-cyan px-6 py-2.5 rounded-lg
+           bg-transparent transition-all duration-200
+           hover:bg-neon-cyan/10 hover:shadow-neon-cyan
+           active:scale-95;
+  }
+
+  .card {
+    @apply bg-surface rounded-xl border border-white/5 p-5
+           transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:border-neon-cyan/30 hover:shadow-neon-cyan cursor-pointer;
+  }
+
+  .glow-text-cyan {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  }
+
+  .glow-text-green {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+
+  .glow-text-gold {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  .glow-text-magenta {
+    text-shadow: 0 0 10px rgba(255, 0, 170, 0.5);
+  }
+}
+
+/* CodeMirror theme overrides */
+.cm-editor {
+  background: #111827 !important;
+  border-radius: 0.75rem;
+  font-size: 14px;
+}
+
+.cm-editor .cm-gutters {
+  background: #0a0e1a !important;
+  border-right: 1px solid #1e293b !important;
+  color: #64748b !important;
+}
+
+.cm-editor .cm-activeLineGutter {
+  background: #1e293b !important;
+}
+
+.cm-editor .cm-activeLine {
+  background: rgba(0, 240, 255, 0.05) !important;
+}
+
+.cm-editor .cm-selectionBackground {
+  background: rgba(0, 240, 255, 0.15) !important;
+}
+
+.cm-editor .cm-cursor {
+  border-left-color: #00f0ff !important;
+}
