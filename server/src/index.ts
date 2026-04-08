@@ -42,15 +42,18 @@ app.get('/api/health', (_req, res) => {
 app.get('/api/leaderboard', async (_req, res) => {
   const { data, error } = await supabase
     .from('player_stats')
-    .select('username, xp, level, rank')
-    .order('xp', { ascending: false })
+    .select('username, total_xp, level, rank')
+    .order('total_xp', { ascending: false })
     .limit(50);
 
   if (error) return res.status(500).json({ error: error.message });
 
   const leaderboard = (data || []).map((entry, i) => ({
     position: i + 1,
-    ...entry,
+    username: entry.username,
+    xp: entry.total_xp || 0,
+    level: entry.level,
+    rank: entry.rank,
   }));
 
   res.json(leaderboard);

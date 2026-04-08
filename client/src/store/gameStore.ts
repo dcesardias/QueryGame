@@ -186,6 +186,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       stats: {
         userId: user.id,
         xp: stats.xp,
+        totalXp: stats.total_xp || 0,
         level: stats.level,
         rank: stats.rank as any,
         streakDays: stats.streak_days,
@@ -382,11 +383,14 @@ export const useGameStore = create<GameState>((set, get) => ({
             bonuses.push('Streak Shield ganho!');
           }
 
+          const newTotalXp = (stats.total_xp || 0) + xpGained;
+
           await supabase.from('player_stats').update({
             xp: newXp,
             level: newLevel,
             rank: newRank,
             streak_shields: shields,
+            total_xp: newTotalXp,
           }).eq('user_id', user.id);
         }
       }

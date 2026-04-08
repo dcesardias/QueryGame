@@ -79,7 +79,7 @@ export default function HomePage() {
               <Trophy className="w-8 h-8 text-neon-gold" />
               <div>
                 <div className="text-lg font-bold text-neon-gold glow-text-gold">
-                  {stats.xp + (stats.level - 1) * 120} XP
+                  {(stats as any).totalXp || 0} XP
                 </div>
                 <div className="text-sm text-text-secondary">XP total acumulado</div>
               </div>

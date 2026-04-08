@@ -21,11 +21,17 @@ export default function LeaderboardPage() {
       try {
         const { data } = await supabase
           .from('player_stats')
-          .select('username, xp, level, rank')
-          .order('xp', { ascending: false })
+          .select('username, total_xp, level, rank')
+          .order('total_xp', { ascending: false })
           .limit(50);
         setEntries(
-          (data || []).map((e, i) => ({ ...e, position: i + 1 })) as LeaderEntry[]
+          (data || []).map((e, i) => ({
+            username: e.username,
+            xp: e.total_xp || 0,
+            level: e.level,
+            rank: e.rank,
+            position: i + 1,
+          }))
         );
       } catch {
         // ignore
