@@ -27,8 +27,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Acesso restrito a administradores' });
   }
 
+  // Parse path from query slug or from URL directly
   const { slug } = req.query;
-  const path = Array.isArray(slug) ? slug.join('/') : slug || '';
+  let path = Array.isArray(slug) ? slug.join('/') : slug || '';
+  if (!path && req.url) {
+    // Fallback: extract from URL (e.g. /api/admin/users -> users)
+    const match = req.url.match(/\/api\/admin\/?(.*)$/);
+    if (match) path = match[1].split('?')[0];
+  }
 
   try {
     // GET /api/admin/users
