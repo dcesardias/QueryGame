@@ -1,6 +1,8 @@
 import CodeMirror from '@uiw/react-codemirror';
 import { sql, SQLite } from '@codemirror/lang-sql';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
+import { Prec } from '@codemirror/state';
+import { useMemo } from 'react';
 
 interface SqlEditorProps {
   value: string;
@@ -48,6 +50,29 @@ const theme = EditorView.theme({
 }, { dark: true });
 
 export default function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
+  const runKeymap = useMemo(
+    () =>
+      Prec.highest(
+        keymap.of([
+          {
+            key: 'Ctrl-Enter',
+            run: () => {
+              onRun?.();
+              return true;
+            },
+          },
+          {
+            key: 'Mod-Enter',
+            run: () => {
+              onRun?.();
+              return true;
+            },
+          },
+        ])
+      ),
+    [onRun]
+  );
+
   return (
     <div className="relative">
       <CodeMirror
@@ -57,16 +82,7 @@ export default function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
           sql({ dialect: SQLite }),
           theme,
           EditorView.lineWrapping,
-          EditorView.domEventHandlers({
-            keydown(event) {
-              if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-                event.preventDefault();
-                onRun?.();
-                return true;
-              }
-              return false;
-            },
-          }),
+          runKeymap,
         ]}
         basicSetup={{
           lineNumbers: true,
