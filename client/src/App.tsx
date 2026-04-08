@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useGameStore } from './store/gameStore';
 import { initSqlEngine } from './services/sqlEngine';
 import Layout from './components/Layout';
@@ -7,6 +7,36 @@ import LoginPage from './pages/Login';
 import HomePage from './pages/Home';
 import ChallengePage from './pages/Challenge';
 import LeaderboardPage from './pages/Leaderboard';
+import OnboardingPage from './pages/Onboarding';
+
+function AppRoutes() {
+  const location = useLocation();
+  const onboardingDone = localStorage.getItem('querygame_onboarding_done') === 'true';
+
+  // Redirect to onboarding if not done (except if already there)
+  if (!onboardingDone && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route
+        path="*"
+        element={
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/challenge/:id" element={<ChallengePage />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        }
+      />
+    </Routes>
+  );
+}
 
 export default function App() {
   const { isAuthenticated, loadSession } = useGameStore();
@@ -44,14 +74,5 @@ export default function App() {
     return <LoginPage />;
   }
 
-  return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/challenge/:id" element={<ChallengePage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
-  );
+  return <AppRoutes />;
 }
