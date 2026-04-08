@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getRankIcon, getXpForNextLevel } from '../types';
-import { Home, Trophy, LogOut, Flame, Shield } from 'lucide-react';
+import { Home, Trophy, LogOut, Flame, Shield, GraduationCap } from 'lucide-react';
 import XpBar from './XpBar';
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -66,6 +66,10 @@ export default function Layout({ children }: { children: ReactNode }) {
               <Link to="/leaderboard" className={`flex items-center gap-1.5 transition-colors ${isActive('/leaderboard')}`}>
                 <Trophy className="w-4 h-4" />
                 <span className="text-sm">Ranking</span>
+              </Link>
+              <Link to="/onboarding" className={`flex items-center gap-1.5 transition-colors ${isActive('/onboarding')}`}>
+                <GraduationCap className="w-4 h-4" />
+                <span className="text-sm">Tutorial</span>
               </Link>
             </nav>
 
