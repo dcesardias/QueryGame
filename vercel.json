@@ -1,9 +1,19 @@
 {
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
-  "installCommand": "echo 'skip'",
+  "installCommand": "npm install @supabase/supabase-js @vercel/node",
   "framework": null,
+  "functions": {
+    "api/admin.ts": {
+      "memory": 256
+    },
+    "api/leaderboard.ts": {
+      "memory": 128
+    }
+  },
   "rewrites": [
+    { "source": "/api/admin/:path*", "destination": "/api/admin" },
+    { "source": "/api/leaderboard", "destination": "/api/leaderboard" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

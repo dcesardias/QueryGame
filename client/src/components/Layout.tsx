@@ -2,7 +2,9 @@ import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getRankIcon, getXpForNextLevel } from '../types';
-import { Home, Trophy, LogOut, Flame, Shield, GraduationCap } from 'lucide-react';
+import { Home, Trophy, LogOut, Flame, Shield, GraduationCap, ShieldCheck } from 'lucide-react';
+
+const ADMIN_EMAILS = ['dcesar@aacd.org.br'];
 import XpBar from './XpBar';
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -71,6 +73,12 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <GraduationCap className="w-4 h-4" />
                 <span className="text-sm">Tutorial</span>
               </Link>
+              {ADMIN_EMAILS.includes(user?.email || '') && (
+                <Link to="/admin" className={`flex items-center gap-1.5 transition-colors ${isActive('/admin')}`}>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="text-sm">Admin</span>
+                </Link>
+              )}
             </nav>
 
             {/* User + Logout (always visible) */}
