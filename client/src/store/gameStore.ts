@@ -73,7 +73,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error('Erro ao criar conta');
-    if (!data.session) throw new Error('Conta criada! Verifique seu email para confirmar.');
 
     const userId = data.user.id;
 
