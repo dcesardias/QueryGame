@@ -8,6 +8,7 @@ import HomePage from './pages/Home';
 import ChallengePage from './pages/Challenge';
 import LeaderboardPage from './pages/Leaderboard';
 import OnboardingPage from './pages/Onboarding';
+import ProfilePage from './pages/Profile';
 
 function AppRoutes() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function AppRoutes() {
               <Route path="/" element={<HomePage />} />
               <Route path="/challenge/:id" element={<ChallengePage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

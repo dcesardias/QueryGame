@@ -75,14 +75,16 @@ export default function Layout({ children }: { children: ReactNode }) {
 
             {/* User + Logout (always visible) */}
             <div className="flex items-center gap-3 ml-4 pl-4 border-l border-white/10">
-              <div className="w-8 h-8 rounded-full bg-neon-cyan/20 flex items-center justify-center">
-                <span className="text-neon-cyan font-bold text-sm">
-                  {user?.username?.[0]?.toUpperCase() || '?'}
+              <Link to="/profile" className="flex items-center gap-2 group" title="Editar perfil">
+                <div className="w-8 h-8 rounded-full bg-neon-cyan/20 flex items-center justify-center group-hover:bg-neon-cyan/30 transition-colors">
+                  <span className="text-neon-cyan font-bold text-sm">
+                    {user?.username?.[0]?.toUpperCase() || '?'}
+                  </span>
+                </div>
+                <span className="text-sm text-text-secondary hidden sm:inline group-hover:text-text-primary transition-colors">
+                  {user?.username || 'Agent'}
                 </span>
-              </div>
-              <span className="text-sm text-text-secondary hidden sm:inline">
-                {user?.username || 'Agent'}
-              </span>
+              </Link>
               <button
                 onClick={logout}
                 className="text-text-muted hover:text-neon-red transition-colors"
