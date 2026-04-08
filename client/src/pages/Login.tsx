@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { supabase } from '../services/supabase';
 import { Terminal, AlertCircle, CheckCircle } from 'lucide-react';
 
+type Mode = 'login' | 'register' | 'forgot';
+
 export default function LoginPage() {
-  const [isRegister, setIsRegister] = useState(false);
+  const [mode, setMode] = useState<Mode>('login');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,6 +15,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login, register } = useGameStore();
 
+  const switchMode = (m: Mode) => {
+    setMode(m);
+    setError('');
+    setSuccess('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -19,14 +28,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (isRegister) {
+      if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw new Error(error.message);
+        setSuccess('Email de recuperação enviado! Verifique sua caixa de entrada.');
+      } else if (mode === 'register') {
         await register(username, email, password);
       } else {
         await login(email, password);
       }
     } catch (err: any) {
       const msg = err.message || 'Erro ao autenticar';
-      if (msg.includes('Verifique') || msg.includes('Conta criada')) {
+      if (msg.includes('Verifique') || msg.includes('Conta criada') || msg.includes('recuperação')) {
         setSuccess(msg);
       } else {
         setError(msg);
@@ -35,6 +48,9 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const title = mode === 'register' ? 'Criar Conta' : mode === 'forgot' ? 'Recuperar Senha' : 'Acessar Terminal';
+  const buttonText = mode === 'register' ? 'Registrar Agente' : mode === 'forgot' ? 'Enviar email' : 'Acessar';
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
@@ -61,12 +77,10 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="card bg-bg-secondary/80 backdrop-blur-sm border-neon-cyan/10">
-          <h2 className="text-xl font-semibold text-text-primary mb-6">
-            {isRegister ? 'Criar Conta' : 'Acessar Terminal'}
-          </h2>
+          <h2 className="text-xl font-semibold text-text-primary mb-6">{title}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
+            {mode === 'register' && (
               <div>
                 <label className="block text-sm text-text-secondary mb-1.5">Codinome</label>
                 <input
@@ -98,20 +112,22 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                         text-text-primary font-mono placeholder:text-text-muted
-                         focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                         transition-all"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            {mode !== 'forgot' && (
+              <div>
+                <label className="block text-sm text-text-secondary mb-1.5">Senha</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
+                           text-text-primary font-mono placeholder:text-text-muted
+                           focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
+                           transition-all"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            )}
 
             {error && (
               <div className="flex items-center gap-2 text-neon-red text-sm bg-neon-red/5 rounded-lg px-3 py-2">
@@ -137,19 +153,33 @@ export default function LoginPage() {
               ) : (
                 <>
                   <Terminal className="w-4 h-4" />
-                  {isRegister ? 'Registrar Agente' : 'Acessar'}
+                  {buttonText}
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-white/5 text-center">
-            <button
-              onClick={() => { setIsRegister(!isRegister); setError(''); }}
-              className="text-sm text-neon-cyan hover:underline"
-            >
-              {isRegister ? 'Já tem conta? Acessar' : 'Novo agente? Criar conta'}
-            </button>
+          <div className="mt-6 pt-4 border-t border-white/5 flex flex-col items-center gap-2">
+            {mode === 'login' && (
+              <>
+                <button onClick={() => switchMode('forgot')} className="text-sm text-text-muted hover:text-neon-cyan transition-colors">
+                  Esqueci minha senha
+                </button>
+                <button onClick={() => switchMode('register')} className="text-sm text-neon-cyan hover:underline">
+                  Novo agente? Criar conta
+                </button>
+              </>
+            )}
+            {mode === 'register' && (
+              <button onClick={() => switchMode('login')} className="text-sm text-neon-cyan hover:underline">
+                Já tem conta? Acessar
+              </button>
+            )}
+            {mode === 'forgot' && (
+              <button onClick={() => switchMode('login')} className="text-sm text-neon-cyan hover:underline">
+                Voltar para o login
+              </button>
+            )}
           </div>
         </div>
 
