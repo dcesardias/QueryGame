@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Lock, CheckCircle, Star, Zap } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
+import Pips from './ui/Pips';
+import Chip from './ui/Chip';
+import { difficultyToPips } from '../types';
 import type { Challenge, ChallengeProgress } from '../types';
 
 interface ChallengeCardProps {
@@ -13,80 +16,38 @@ export default function ChallengeCard({ challenge, progress }: ChallengeCardProp
 
   const isLocked = status === 'locked';
   const isCompleted = status === 'completed';
+  const isBoss = challenge.isBoss;
+  const statusClass = isCompleted ? 'is-solved' : isLocked ? 'is-locked' : 'is-available';
 
   return (
     <button
       onClick={() => !isLocked && navigate(`/challenge/${challenge.id}`)}
       disabled={isLocked}
-      className={`
-        card text-left w-full transition-all duration-200
-        ${isLocked
-          ? 'opacity-40 cursor-not-allowed border-white/5'
-          : isCompleted
-            ? 'border-neon-green/30 hover:shadow-neon-green cursor-pointer'
-            : 'border-neon-cyan/20 hover:border-neon-cyan/40 hover:shadow-neon-cyan cursor-pointer'
-        }
-        ${challenge.isBoss && !isLocked
-          ? 'border-neon-magenta/30 hover:border-neon-magenta/50 hover:shadow-neon-magenta ring-1 ring-neon-magenta/10'
-          : ''
-        }
-      `}
+      className={`case-card ${statusClass}${isBoss ? ' is-boss' : ''}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {challenge.isBoss && (
-              <span className="text-xs font-bold text-neon-magenta bg-neon-magenta/10 px-2 py-0.5 rounded">
-                BOSS
-              </span>
-            )}
-            <h3 className={`font-semibold truncate ${
-              challenge.isBoss ? 'text-neon-magenta' : 'text-text-primary'
-            }`}>
-              {challenge.title}
-            </h3>
-          </div>
-          <p className="text-sm text-text-secondary line-clamp-2">{challenge.description}</p>
-          <div className="flex items-center gap-3 mt-2">
-            <div className="flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-neon-gold" />
-              <span className="text-xs text-neon-gold">{challenge.xpReward} XP</span>
-            </div>
-            <span className="text-xs text-text-muted capitalize">{challenge.type}</span>
-            {progress?.attempts ? (
-              <span className="text-xs text-text-muted">
-                {progress.attempts} tentativa{progress.attempts !== 1 ? 's' : ''}
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="flex-shrink-0">
-          {isLocked && <Lock className="w-5 h-5 text-text-muted" />}
-          {isCompleted && <CheckCircle className="w-5 h-5 text-neon-green" />}
-          {status === 'available' && !challenge.isBoss && (
-            <Star className="w-5 h-5 text-neon-cyan" />
-          )}
-          {status === 'available' && challenge.isBoss && (
-            <Star className="w-5 h-5 text-neon-magenta" />
-          )}
-        </div>
+      <div className="flex items-center justify-between">
+        <span className="mono faint text-[11px] tracking-[0.1em]">CASO Nº {challenge.id}</span>
+        {isCompleted && <Check size={16} className="text-sage" />}
+        {isLocked && <Lock size={14} className="text-ink-3" />}
+        {isBoss && !isLocked && !isCompleted && <Chip variant="ox">Prioritário</Chip>}
       </div>
 
-      {/* Difficulty dots */}
-      <div className="flex gap-1 mt-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div
-            key={i}
-            className={`w-1.5 h-1.5 rounded-full ${
-              i < challenge.difficulty
-                ? challenge.isBoss
-                  ? 'bg-neon-magenta'
-                  : 'bg-neon-cyan'
-                : 'bg-white/10'
-            }`}
-          />
-        ))}
+      <div>
+        <div
+          className="display text-[19px] font-semibold leading-tight"
+          style={{ color: isBoss && !isLocked ? 'var(--oxblood)' : 'var(--ink)' }}
+        >
+          {challenge.title}
+        </div>
+        <div className="muted text-[13px] mt-1.5 leading-snug line-clamp-2">{challenge.description}</div>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between pt-1">
+        <Chip variant={isBoss ? 'ox' : 'brass'}>{challenge.concept.replace(/_/g, ' ')}</Chip>
+        <div className="flex items-center gap-2.5">
+          <Pips level={difficultyToPips(challenge.difficulty)} ox={isBoss} />
+          <span className="mono text-[12px] text-brass">+{challenge.xpReward}</span>
+        </div>
       </div>
     </button>
   );

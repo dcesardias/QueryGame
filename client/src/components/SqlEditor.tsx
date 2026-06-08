@@ -2,7 +2,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { sql, SQLite } from '@codemirror/lang-sql';
 import { EditorView, keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 import { useMemo } from 'react';
+import { Fingerprint } from 'lucide-react';
 
 interface SqlEditorProps {
   value: string;
@@ -10,44 +13,44 @@ interface SqlEditorProps {
   onRun?: () => void;
 }
 
-const theme = EditorView.theme({
-  '&': {
-    backgroundColor: '#111827',
-    fontSize: '14px',
-    borderRadius: '0.75rem',
-    border: '1px solid rgba(255,255,255,0.05)',
-  },
+// Theme-aware shell. Colors come from the noir CSS variables, so the editor
+// follows the active light/dark theme (no hardcoded palette).
+const noirTheme = EditorView.theme({
+  '&': { backgroundColor: 'transparent', color: 'var(--ink)', fontSize: '14px' },
   '.cm-content': {
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    caretColor: '#00f0ff',
+    fontFamily: 'var(--font-mono)',
+    caretColor: 'var(--brass-bright)',
     minHeight: '120px',
     padding: '12px 0',
   },
   '.cm-gutters': {
-    backgroundColor: '#0a0e1a',
-    borderRight: '1px solid #1e293b',
-    color: '#64748b',
+    backgroundColor: 'var(--bg)',
+    borderRight: '1px solid var(--line)',
+    color: 'var(--ink-3)',
   },
-  '.cm-activeLineGutter': {
-    backgroundColor: '#1e293b',
+  '.cm-activeLineGutter': { backgroundColor: 'var(--panel)' },
+  '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--brass) 6%, transparent)' },
+  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'var(--brass-glow) !important',
   },
-  '.cm-activeLine': {
-    backgroundColor: 'rgba(0, 240, 255, 0.03)',
-  },
-  '.cm-selectionBackground': {
-    backgroundColor: 'rgba(0, 240, 255, 0.15) !important',
-  },
-  '&.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'rgba(0, 240, 255, 0.15) !important',
-  },
-  '.cm-cursor': {
-    borderLeftColor: '#00f0ff',
-  },
+  '.cm-cursor': { borderLeftColor: 'var(--brass-bright)' },
   '.cm-matchingBracket': {
-    backgroundColor: 'rgba(0, 240, 255, 0.2)',
-    outline: '1px solid rgba(0, 240, 255, 0.3)',
+    backgroundColor: 'var(--brass-glow)',
+    outline: '1px solid var(--line-strong)',
   },
-}, { dark: true });
+});
+
+// SQL token colors per the design handoff: keyword=brass, function=oxblood,
+// string=sage, number=lavender, comment=ink-3.
+const noirHighlight = HighlightStyle.define([
+  { tag: t.keyword, color: 'var(--brass-bright)', fontWeight: '600' },
+  { tag: [t.function(t.variableName), t.function(t.propertyName), t.standard(t.function(t.variableName))], color: 'var(--oxblood)' },
+  { tag: [t.string, t.special(t.string)], color: 'var(--sage)' },
+  { tag: [t.number, t.bool, t.null], color: '#c9a8e0' },
+  { tag: [t.lineComment, t.blockComment], color: 'var(--ink-3)', fontStyle: 'italic' },
+  { tag: t.operator, color: 'var(--ink-2)' },
+  { tag: t.variableName, color: 'var(--ink)' },
+]);
 
 export default function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
   const runKeymap = useMemo(
@@ -74,13 +77,21 @@ export default function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
   );
 
   return (
-    <div className="relative">
+    <div className="editor-shell">
+      <div className="editor-head">
+        <div className="flex items-center gap-2">
+          <Fingerprint size={15} className="text-brass" />
+          <span className="mono uppercase text-ink-3 text-[11px] tracking-[0.12em]">consulta.sql</span>
+        </div>
+        <span className="mono text-ink-3 text-[10.5px]">⌘↵ executar</span>
+      </div>
       <CodeMirror
         value={value}
         onChange={onChange}
         extensions={[
           sql({ dialect: SQLite }),
-          theme,
+          syntaxHighlighting(noirHighlight),
+          noirTheme,
           EditorView.lineWrapping,
           runKeymap,
         ]}
@@ -93,13 +104,10 @@ export default function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
           foldGutter: false,
           highlightActiveLineGutter: true,
         }}
-        theme="dark"
+        theme="none"
         minHeight="150px"
         maxHeight="300px"
       />
-      <div className="absolute bottom-2 right-2 text-xs text-text-muted">
-        Ctrl+Enter para executar
-      </div>
     </div>
   );
 }

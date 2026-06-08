@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
-import type { PlayerStats, ChallengeProgress, DailyMission, Badge, Rank } from '../types';
+import type { PlayerStats, ChallengeProgress, DailyMission, Badge, Rank, ConceptHealth } from '../types';
 
 function getRankForLevel(level: number): Rank {
   if (level <= 5) return 'Estagiário';
@@ -20,6 +20,7 @@ interface GameState {
   stats: PlayerStats | null;
   challengeProgress: Record<string, ChallengeProgress>;
   missions: DailyMission[];
+  conceptHealth: ConceptHealth[];
   badges: Badge[];
   loading: boolean;
   xpPopup: { amount: number; bonuses: string[] } | null;
@@ -31,6 +32,7 @@ interface GameState {
   fetchStats: () => Promise<void>;
   fetchChallengeProgress: () => Promise<void>;
   fetchMissions: () => Promise<void>;
+  fetchConceptHealth: () => Promise<void>;
   submitChallenge: (challengeId: string, correct: boolean, timeMs: number, concept: string) => Promise<{ xpGained: number; bonuses: string[] }>;
   showXpPopup: (amount: number, bonuses: string[]) => void;
   hideXpPopup: () => void;
@@ -42,6 +44,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   stats: null,
   challengeProgress: {},
   missions: [],
+  conceptHealth: [],
   badges: [],
   loading: false,
   xpPopup: null,
@@ -95,6 +98,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       stats: null,
       challengeProgress: {},
       missions: [],
+      conceptHealth: [],
       badges: [],
     });
   },
@@ -271,6 +275,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     set({ missions: missions as any });
+  },
+
+  // Read-only: surfaces the spaced-repetition rows written by submitChallenge,
+  // for the "Memória de campo" panel. Does not alter any game mechanic.
+  fetchConceptHealth: async () => {
+    const user = get().user;
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('concept_health')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (!data) return;
+
+    set({
+      conceptHealth: data.map(c => ({
+        concept: c.concept,
+        health: c.health,
+        intervalDays: c.interval_days,
+        lastReviewed: c.last_reviewed,
+        consecutiveCorrect: c.consecutive_correct,
+      })),
+    });
   },
 
   submitChallenge: async (challengeId, correct, timeMs, concept) => {

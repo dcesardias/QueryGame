@@ -84,28 +84,29 @@ export default function ProfilePage() {
     }
   };
 
+  const inputClass =
+    'w-full rounded-lg border border-line bg-bg-deep px-4 py-2.5 text-ink font-mono ' +
+    'placeholder:text-ink-3 focus:outline-none focus:border-brass transition-colors';
+
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Perfil do Agente</h1>
+      <h1 className="display text-2xl font-bold text-ink">Perfil do Agente</h1>
 
       {/* Username */}
-      <div className="card bg-bg-secondary">
+      <div className="card">
         <div className="flex items-center gap-2 mb-4">
-          <User className="w-5 h-5 text-neon-cyan" />
-          <h2 className="text-lg font-semibold text-text-primary">Codinome</h2>
+          <User className="w-5 h-5 text-brass" />
+          <h2 className="display text-lg font-semibold text-ink">Codinome</h2>
         </div>
 
         <form onSubmit={handleUpdateUsername} className="space-y-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1.5">Codinome atual</label>
+            <label className="block text-sm muted mb-1.5">Codinome atual</label>
             <input
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                       text-text-primary font-mono placeholder:text-text-muted
-                       focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                       transition-all"
+              className={inputClass}
               placeholder="Seu codinome"
               required
             />
@@ -118,7 +119,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={usernameLoading}
-            className="btn-primary flex items-center gap-2 text-sm"
+            className="btn-primary text-sm"
           >
             {usernameLoading ? <Spinner /> : <Save className="w-4 h-4" />}
             Salvar codinome
@@ -127,38 +128,32 @@ export default function ProfilePage() {
       </div>
 
       {/* Password */}
-      <div className="card bg-bg-secondary">
+      <div className="card">
         <div className="flex items-center gap-2 mb-4">
-          <KeyRound className="w-5 h-5 text-neon-magenta" />
-          <h2 className="text-lg font-semibold text-text-primary">Alterar Senha</h2>
+          <KeyRound className="w-5 h-5 text-oxblood" />
+          <h2 className="display text-lg font-semibold text-ink">Alterar Senha</h2>
         </div>
 
         <form onSubmit={handleUpdatePassword} className="space-y-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1.5">Nova senha</label>
+            <label className="block text-sm muted mb-1.5">Nova senha</label>
             <input
               type="password"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                       text-text-primary font-mono placeholder:text-text-muted
-                       focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                       transition-all"
+              className={inputClass}
               placeholder="••••••••"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm text-text-secondary mb-1.5">Confirmar nova senha</label>
+            <label className="block text-sm muted mb-1.5">Confirmar nova senha</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                       text-text-primary font-mono placeholder:text-text-muted
-                       focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                       transition-all"
+              className={inputClass}
               placeholder="••••••••"
               required
             />
@@ -171,7 +166,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={passwordLoading}
-            className="btn-primary flex items-center gap-2 text-sm bg-neon-magenta hover:shadow-neon-magenta"
+            className="btn-primary text-sm"
           >
             {passwordLoading ? <Spinner /> : <KeyRound className="w-4 h-4" />}
             Alterar senha
@@ -180,7 +175,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Info */}
-      <div className="text-xs text-text-muted text-center">
+      <div className="text-xs faint text-center">
         Email: {user?.email}
       </div>
     </div>
@@ -188,10 +183,12 @@ export default function ProfilePage() {
 }
 
 function Msg({ type, text }: { type: 'success' | 'error'; text: string }) {
+  const color = type === 'success' ? 'var(--sage)' : 'var(--oxblood)';
   return (
-    <div className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${
-      type === 'success' ? 'text-neon-green bg-neon-green/5' : 'text-neon-red bg-neon-red/5'
-    }`}>
+    <div
+      className="flex items-center gap-2 text-sm rounded-lg px-3 py-2"
+      style={{ color, background: `color-mix(in srgb, ${color} 12%, var(--panel))` }}
+    >
       {type === 'success' ? (
         <CheckCircle className="w-4 h-4 flex-shrink-0" />
       ) : (
@@ -203,5 +200,5 @@ function Msg({ type, text }: { type: 'success' | 'error'; text: string }) {
 }
 
 function Spinner() {
-  return <div className="w-4 h-4 border-2 border-bg-primary/30 border-t-bg-primary rounded-full animate-spin" />;
+  return <div className="w-4 h-4 border-2 border-bg/40 border-t-bg rounded-full animate-spin" />;
 }

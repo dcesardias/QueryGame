@@ -52,45 +52,38 @@ export default function LoginPage() {
   const title = mode === 'register' ? 'Criar Conta' : mode === 'forgot' ? 'Recuperar Senha' : 'Acessar Terminal';
   const buttonText = mode === 'register' ? 'Registrar Agente' : mode === 'forgot' ? 'Enviar email' : 'Acessar';
 
+  const inputClass =
+    'w-full rounded-lg border border-line bg-bg-deep px-4 py-2.5 text-ink font-mono ' +
+    'placeholder:text-ink-3 focus:outline-none focus:border-brass transition-colors';
+
   return (
-    <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
-      {/* Background effect */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-neon-cyan/[0.02] via-transparent to-neon-magenta/[0.02]" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-magenta/5 rounded-full blur-[120px]" />
-      </div>
+    <div className="qg-app min-h-screen flex items-center justify-center px-4">
+      <div className="qg-spot" />
+      <div className="qg-grain" />
 
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Terminal className="w-10 h-10 text-neon-cyan" />
-            <h1 className="text-4xl font-mono font-bold text-neon-cyan glow-text-cyan">
-              QueryGame
-            </h1>
-          </div>
-          <p className="text-text-secondary text-sm">
-            Data Investigation Agency — Domine SQL resolvendo casos
-          </p>
+          <div className="eyebrow">Data Investigation Agency</div>
+          <h1 className="display text-[40px] font-bold mt-2.5">
+            Query<span className="brass">Game</span>
+          </h1>
+          <p className="muted text-sm mt-2">Domine SQL resolvendo casos.</p>
         </div>
 
         {/* Form */}
-        <div className="card bg-bg-secondary/80 backdrop-blur-sm border-neon-cyan/10">
-          <h2 className="text-xl font-semibold text-text-primary mb-6">{title}</h2>
+        <div className="card">
+          <h2 className="display text-xl font-semibold text-ink mb-6">{title}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm text-text-secondary mb-1.5">Codinome</label>
+                <label className="block text-sm muted mb-1.5">Codinome</label>
                 <input
                   type="text"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                           text-text-primary font-mono placeholder:text-text-muted
-                           focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                           transition-all"
+                  className={inputClass}
                   placeholder="Seu codinome de agente"
                   required
                 />
@@ -98,15 +91,12 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Email</label>
+              <label className="block text-sm muted mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                         text-text-primary font-mono placeholder:text-text-muted
-                         focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                         transition-all"
+                className={inputClass}
                 placeholder="agente@dia.gov"
                 required
               />
@@ -114,15 +104,12 @@ export default function LoginPage() {
 
             {mode !== 'forgot' && (
               <div>
-                <label className="block text-sm text-text-secondary mb-1.5">Senha</label>
+                <label className="block text-sm muted mb-1.5">Senha</label>
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-4 py-2.5
-                           text-text-primary font-mono placeholder:text-text-muted
-                           focus:outline-none focus:border-neon-cyan/50 focus:shadow-neon-cyan
-                           transition-all"
+                  className={inputClass}
                   placeholder="••••••••"
                   required
                 />
@@ -130,14 +117,20 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <div className="flex items-center gap-2 text-neon-red text-sm bg-neon-red/5 rounded-lg px-3 py-2">
+              <div
+                className="flex items-center gap-2 text-[13.5px] rounded-lg px-3 py-2"
+                style={{ color: 'var(--oxblood)', background: 'color-mix(in srgb, var(--oxblood) 12%, var(--panel))' }}
+              >
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 text-neon-green text-sm bg-neon-green/5 rounded-lg px-3 py-2">
+              <div
+                className="flex items-center gap-2 text-[13.5px] rounded-lg px-3 py-2"
+                style={{ color: 'var(--sage)', background: 'color-mix(in srgb, var(--sage) 12%, var(--panel))' }}
+              >
                 <CheckCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{success}</span>
               </div>
@@ -146,10 +139,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
+              className="btn-primary w-full justify-center"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-bg-primary/30 border-t-bg-primary rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-bg/40 border-t-bg rounded-full animate-spin" />
               ) : (
                 <>
                   <Terminal className="w-4 h-4" />
@@ -159,24 +152,24 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-white/5 flex flex-col items-center gap-2">
+          <div className="mt-6 pt-4 border-t border-line flex flex-col items-center gap-2">
             {mode === 'login' && (
               <>
-                <button onClick={() => switchMode('forgot')} className="text-sm text-text-muted hover:text-neon-cyan transition-colors">
+                <button onClick={() => switchMode('forgot')} className="text-sm faint hover:text-brass transition-colors">
                   Esqueci minha senha
                 </button>
-                <button onClick={() => switchMode('register')} className="text-sm text-neon-cyan hover:underline">
+                <button onClick={() => switchMode('register')} className="text-sm text-brass hover:underline">
                   Novo agente? Criar conta
                 </button>
               </>
             )}
             {mode === 'register' && (
-              <button onClick={() => switchMode('login')} className="text-sm text-neon-cyan hover:underline">
+              <button onClick={() => switchMode('login')} className="text-sm text-brass hover:underline">
                 Já tem conta? Acessar
               </button>
             )}
             {mode === 'forgot' && (
-              <button onClick={() => switchMode('login')} className="text-sm text-neon-cyan hover:underline">
+              <button onClick={() => switchMode('login')} className="text-sm text-brass hover:underline">
                 Voltar para o login
               </button>
             )}
@@ -184,10 +177,10 @@ export default function LoginPage() {
         </div>
 
         {/* Decorative terminal lines */}
-        <div className="mt-6 font-mono text-xs text-text-muted/40 space-y-1">
-          <div>{'>'} Connecting to DIA secure database...</div>
+        <div className="mt-6 font-mono text-xs faint space-y-1">
+          <div>{'>'} Connecting to DIA secure database…</div>
           <div>{'>'} Encryption protocol: AES-256</div>
-          <div>{'>'} Status: <span className="text-neon-green/60">ONLINE</span></div>
+          <div>{'>'} Status: <span className="sage-t">ONLINE</span></div>
         </div>
       </div>
     </div>

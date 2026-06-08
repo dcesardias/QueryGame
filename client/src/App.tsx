@@ -65,10 +65,10 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto" />
-          <p className="text-text-secondary mt-4 font-mono text-sm">Inicializando terminal...</p>
+          <div className="w-10 h-10 border-2 border-line border-t-brass rounded-full animate-spin mx-auto" />
+          <p className="muted mt-4 font-mono text-sm">Inicializando terminal…</p>
         </div>
       </div>
     );

@@ -7,10 +7,13 @@ import { useGameStore } from '../store/gameStore';
 import SqlEditor from '../components/SqlEditor';
 import ResultTable from '../components/ResultTable';
 import SchemaViewer from '../components/SchemaViewer';
+import Pips from '../components/ui/Pips';
+import Stamp from '../components/ui/Stamp';
+import { difficultyToPips } from '../types';
 import type { QueryResult } from '../types';
 import {
   Play, ArrowLeft, Lightbulb, CheckCircle, XCircle,
-  Clock, RotateCcw, ChevronRight, Zap,
+  Clock, RotateCcw, ArrowRight, Search,
 } from 'lucide-react';
 
 export default function ChallengePage() {
@@ -27,6 +30,7 @@ export default function ChallengePage() {
   const [attempts, setAttempts] = useState(0);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [solved, setSolved] = useState(false);
+  const [justSolved, setJustSolved] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [dbReady, setDbReady] = useState(false);
@@ -46,6 +50,7 @@ export default function ChallengePage() {
     setAttempts(0);
     setFailedAttempts(0);
     setSolved(challengeProgress[challenge.id]?.status === 'completed');
+    setJustSolved(false);
     setTimer(0);
     setIsRunning(false);
     setDbReady(false);
@@ -85,9 +90,9 @@ export default function ChallengePage() {
   if (!challenge) {
     return (
       <div className="text-center py-20">
-        <p className="text-text-secondary">Desafio não encontrado.</p>
-        <Link to="/" className="text-neon-cyan hover:underline mt-2 inline-block">
-          Voltar ao Dashboard
+        <p className="muted">Caso não encontrado.</p>
+        <Link to="/" className="text-brass hover:underline mt-2 inline-block">
+          Voltar ao arquivo
         </Link>
       </div>
     );
@@ -124,6 +129,7 @@ export default function ChallengePage() {
 
       if (comparison.correct && !solved) {
         setSolved(true);
+        setJustSolved(true);
         if (timerRef.current) clearInterval(timerRef.current);
         const timeMs = Date.now() - startTimeRef.current;
 
@@ -174,130 +180,133 @@ export default function ChallengePage() {
   const nextChallenge = getChallengeById(nextId);
   const nextAvailable = nextChallenge && challengeProgress[nextId]?.status !== 'locked';
 
+  const feedbackOk = feedback?.type === 'correct';
+  const feedbackColor = feedbackOk ? 'var(--sage)' : 'var(--oxblood)';
+
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="mx-auto max-w-[1180px]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="text-text-muted hover:text-text-primary transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+      <div className="flex flex-wrap items-center justify-between gap-3.5 mb-6">
+        <div className="flex items-center gap-3.5">
+          <button onClick={() => navigate('/')} className="btn-secondary btn-sm">
+            <ArrowLeft size={15} />
+            Arquivo
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              {challenge.isBoss && (
-                <span className="text-xs font-bold text-neon-magenta bg-neon-magenta/10 px-2 py-0.5 rounded">
-                  BOSS
-                </span>
-              )}
-              <h1 className={`text-xl font-bold ${challenge.isBoss ? 'text-neon-magenta' : 'text-text-primary'}`}>
-                {challenge.title}
-              </h1>
+            <div className="flex items-center gap-2.5">
+              <span className="mono faint text-xs tracking-[0.1em]">CASO Nº {challenge.id}</span>
+              {challenge.isBoss && <span className="chip chip-ox">Prioritário</span>}
             </div>
-            <div className="flex items-center gap-3 mt-1 text-sm text-text-secondary">
-              <span>Nível {challenge.level}</span>
-              <span>•</span>
-              <span className="capitalize">{challenge.type}</span>
-              <span>•</span>
-              <div className="flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-neon-gold" />
-                <span className="text-neon-gold">{challenge.xpReward} XP</span>
-              </div>
-            </div>
+            <h1
+              className="display sec-h text-[28px] font-bold mt-1"
+              style={{ color: challenge.isBoss ? 'var(--oxblood)' : 'var(--ink)' }}
+            >
+              {challenge.title}
+            </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-text-secondary">
-            <Clock className="w-4 h-4" />
-            <span className="font-mono text-sm">{formatTime(timer)}</span>
+        <div className="flex items-center gap-[18px]">
+          <div className="flex items-center gap-1.5 text-ink-2">
+            <Clock size={15} />
+            <span className="mono text-[13px]">{formatTime(timer)}</span>
           </div>
-          {solved && (
-            <div className="flex items-center gap-1.5 text-neon-green">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Resolvido</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            <Pips level={difficultyToPips(challenge.difficulty)} ox={challenge.isBoss} />
+            <span className="mono brass text-[13px]">+{challenge.xpReward} XP</span>
+          </div>
+          {solved && <Stamp label="Resolvido" kind="solved" animate={justSolved} />}
         </div>
       </div>
 
       {/* Loading state */}
       {!dbReady && (
         <div className="text-center py-16">
-          <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto" />
-          <p className="text-text-secondary mt-4 text-sm">Carregando banco de dados...</p>
+          <div className="w-8 h-8 border-2 border-line border-t-brass rounded-full animate-spin mx-auto" />
+          <p className="muted mt-4 text-sm">Carregando banco de dados…</p>
         </div>
       )}
 
       {dbReady && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Schema */}
-          <div className="lg:col-span-1 space-y-4">
+        <div
+          className="grid gap-[22px] items-start case-layout"
+          style={{ gridTemplateColumns: '0.85fr 1.3fr' }}
+        >
+          {/* LEFT — dossier */}
+          <div className="flex flex-col gap-4">
             {/* Briefing */}
-            <div className="card bg-bg-secondary border-white/5">
-              <h3 className="text-sm font-semibold text-neon-cyan mb-2">Briefing do Caso</h3>
-              <p className="text-sm text-text-secondary leading-relaxed">{challenge.briefing}</p>
+            <div className="card">
+              <div className="eyebrow mb-2.5">Briefing do caso</div>
+              <p className="muted text-[14.5px] leading-relaxed m-0">{challenge.briefing}</p>
             </div>
 
             <SchemaViewer />
 
-            {/* Hints */}
-            <div className="card bg-bg-secondary border-white/5">
-              <div className="flex items-center justify-between mb-2">
+            {/* Hints — "Linha de raciocínio" */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-neon-magenta" />
-                  <h3 className="text-sm font-semibold text-text-primary">Dicas</h3>
+                  <Lightbulb size={16} className="text-brass" />
+                  <span className="eyebrow">Linha de raciocínio</span>
                 </div>
                 {failedAttempts >= 3 && hintIndex < challenge.hints.length - 1 && (
-                  <button
-                    onClick={showNextHint}
-                    className="text-xs text-neon-magenta hover:underline"
-                  >
-                    {hintIndex < 0 ? 'Mostrar dica' : 'Próxima dica'}
+                  <button onClick={showNextHint} className="btn-secondary btn-sm">
+                    {hintIndex < 0 ? 'Pedir dica' : 'Próxima'}
                   </button>
                 )}
               </div>
               {hintIndex >= 0 ? (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2.5">
                   {challenge.hints.slice(0, hintIndex + 1).map((hint, i) => (
-                    <div key={i} className="text-sm text-text-secondary bg-neon-magenta/5 rounded-lg px-3 py-2 font-mono">
-                      {hint}
+                    <div key={i} className="fade-up flex items-start gap-2.5 text-[13.5px] text-ink-2 leading-relaxed">
+                      <span className="mono brass shrink-0">{i + 1}.</span>
+                      <span>{hint}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-text-muted">
+                <p className="faint text-[13px] m-0 leading-relaxed">
                   {failedAttempts < 3
-                    ? `Tente resolver primeiro! (dica disponível após ${3 - failedAttempts} erro${3 - failedAttempts !== 1 ? 's' : ''})`
-                    : 'Clique em "Mostrar dica" para ajuda.'
-                  }
+                    ? `Tente primeiro por conta própria — uma dica é liberada após ${3 - failedAttempts} erro${3 - failedAttempts !== 1 ? 's' : ''}.`
+                    : 'Clique em "Pedir dica" para uma pista.'}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Right: Editor + Results */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Description */}
-            <div className="card bg-bg-secondary border-white/5">
-              <p className="text-text-primary">{challenge.description}</p>
+          {/* RIGHT — work */}
+          <div className="flex flex-col gap-4">
+            {/* Task — "Sua missão" */}
+            <div className="card flex items-start gap-3 border-l-[3px] border-l-brass">
+              <Search size={18} className="text-brass mt-0.5 shrink-0" />
+              <div>
+                <div className="kicker mb-1">Sua missão</div>
+                <p className="text-[15.5px] m-0 leading-relaxed text-ink">{challenge.description}</p>
+              </div>
             </div>
 
             {/* SQL Editor */}
             <div>
               <SqlEditor value={code} onChange={setCode} onRun={handleRun} />
-              <div className="flex items-center gap-3 mt-3">
-                <button onClick={handleRun} disabled={isRunning || !code.trim()} className="btn-primary flex items-center gap-2">
-                  <Play className="w-4 h-4" />
-                  Executar
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <button onClick={handleRun} disabled={isRunning || !code.trim()} className="btn-primary">
+                  <Play size={15} />
+                  Investigar
                 </button>
-                <button onClick={handleReset} className="btn-secondary flex items-center gap-2">
-                  <RotateCcw className="w-4 h-4" />
-                  Reset
+                <button onClick={handleReset} className="btn-secondary">
+                  <RotateCcw size={15} />
+                  Reiniciar
                 </button>
                 {solved && nextAvailable && (
-                  <Link to={`/challenge/${nextId}`} className="btn-primary flex items-center gap-2 bg-neon-green text-bg-primary hover:shadow-neon-green ml-auto">
-                    Próximo
-                    <ChevronRight className="w-4 h-4" />
+                  <Link to={`/challenge/${nextId}`} className="btn-solve ml-auto">
+                    Próximo caso
+                    <ArrowRight size={15} />
+                  </Link>
+                )}
+                {solved && !nextAvailable && (
+                  <Link to="/" className="btn-solve ml-auto">
+                    Voltar ao arquivo
+                    <ArrowRight size={15} />
                   </Link>
                 )}
               </div>
@@ -306,26 +315,28 @@ export default function ChallengePage() {
             {/* Feedback */}
             {feedback && (
               <div
-                className={`rounded-lg border px-4 py-3 flex items-start gap-3 ${
-                  feedback.type === 'correct'
-                    ? 'bg-neon-green/5 border-neon-green/30'
-                    : feedback.type === 'syntax_error'
-                      ? 'bg-neon-red/5 border-neon-red/30'
-                      : 'bg-neon-orange/5 border-neon-orange/30'
-                }`}
+                className="fade-up flex items-start gap-3 px-4 py-3.5"
+                style={{
+                  borderRadius: 'var(--r)',
+                  border: `1px solid color-mix(in srgb, ${feedbackColor} 55%, transparent)`,
+                  borderLeft: `3px solid ${feedbackColor}`,
+                  background: `color-mix(in srgb, ${feedbackColor} 15%, var(--panel))`,
+                }}
               >
-                {feedback.type === 'correct' ? (
-                  <CheckCircle className="w-5 h-5 text-neon-green flex-shrink-0 mt-0.5" />
+                {feedbackOk ? (
+                  <CheckCircle size={19} className="shrink-0 mt-0.5" style={{ color: feedbackColor }} />
                 ) : (
-                  <XCircle className="w-5 h-5 text-neon-red flex-shrink-0 mt-0.5" />
+                  <XCircle size={19} className="shrink-0 mt-0.5" style={{ color: feedbackColor }} />
                 )}
                 <div>
-                  <div className={`font-medium ${
-                    feedback.type === 'correct' ? 'text-neon-green' : 'text-neon-red'
-                  }`}>
-                    {feedback.type === 'correct' ? 'Correto!' : 'Incorreto'}
+                  <div className="display font-semibold text-[16.5px]" style={{ color: feedbackColor }}>
+                    {feedbackOk
+                      ? 'Caso encerrado.'
+                      : feedback.type === 'syntax_error'
+                        ? 'A consulta falhou.'
+                        : 'Ainda não.'}
                   </div>
-                  <div className="text-sm text-text-secondary mt-0.5">{feedback.message}</div>
+                  <div className="text-[13.5px] mt-0.5 text-ink">{feedback.message}</div>
                 </div>
               </div>
             )}
@@ -335,7 +346,7 @@ export default function ChallengePage() {
               <ResultTable
                 result={result}
                 label="Seu resultado"
-                highlight={feedback?.type === 'correct' ? 'success' : feedback ? 'error' : 'neutral'}
+                highlight={feedbackOk ? 'success' : feedback ? 'error' : 'neutral'}
               />
             )}
 

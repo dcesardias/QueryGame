@@ -1,3 +1,4 @@
+import { XCircle } from 'lucide-react';
 import type { QueryResult } from '../types';
 
 interface ResultTableProps {
@@ -10,61 +11,54 @@ interface ResultTableProps {
 export default function ResultTable({ result, label, maxRows = 50, highlight = 'neutral' }: ResultTableProps) {
   if (result.error) {
     return (
-      <div className="rounded-lg bg-neon-red/5 border border-neon-red/20 p-4">
-        <div className="text-neon-red text-sm font-mono">{result.error}</div>
+      <div className="qtable-wrap bad p-4">
+        <div className="flex items-start gap-2.5">
+          <XCircle size={16} className="text-oxblood mt-0.5 shrink-0" />
+          <div>
+            <div className="mono text-oxblood text-xs uppercase tracking-[0.1em] mb-1">Erro</div>
+            <div className="muted text-[13.5px]">{result.error}</div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (result.columns.length === 0) {
     return (
-      <div className="rounded-lg bg-surface border border-white/5 p-4">
-        <div className="text-text-muted text-sm">Nenhum resultado retornado.</div>
+      <div className="qtable-wrap p-4">
+        <div className="faint text-sm">Nenhuma linha retornada.</div>
       </div>
     );
   }
 
-  const borderColor = highlight === 'success'
-    ? 'border-neon-green/30'
-    : highlight === 'error'
-      ? 'border-neon-red/30'
-      : 'border-white/5';
-
+  const statusClass = highlight === 'success' ? 'ok' : highlight === 'error' ? 'bad' : '';
   const displayRows = result.rows.slice(0, maxRows);
   const hasMore = result.rows.length > maxRows;
+  const rowLabel = `${result.rows.length} linha${result.rows.length !== 1 ? 's' : ''}`;
 
   return (
-    <div className={`rounded-lg border ${borderColor} overflow-hidden`}>
+    <div>
       {label && (
-        <div className={`px-3 py-1.5 text-xs font-medium border-b ${borderColor} ${
-          highlight === 'success' ? 'bg-neon-green/5 text-neon-green' :
-          highlight === 'error' ? 'bg-neon-red/5 text-neon-red' :
-          'bg-surface text-text-secondary'
-        }`}>
-          {label} ({result.rows.length} linha{result.rows.length !== 1 ? 's' : ''})
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="kicker">{label}</span>
+          <span className="faint mono text-[11px]">{rowLabel}</span>
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm font-mono">
+      <div className={`qtable-wrap ${statusClass}`} style={{ maxHeight: 320 }}>
+        <table className="qtable">
           <thead>
-            <tr className="bg-bg-primary/50">
+            <tr>
               {result.columns.map((col, i) => (
-                <th key={i} className="px-3 py-2 text-left text-xs text-neon-cyan font-medium border-b border-white/5">
-                  {col}
-                </th>
+                <th key={i}>{col}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {displayRows.map((row, i) => (
-              <tr key={i} className="hover:bg-white/[0.02] border-b border-white/[0.03] last:border-0">
+              <tr key={i}>
                 {row.map((cell, j) => (
-                  <td key={j} className="px-3 py-1.5 text-text-primary whitespace-nowrap">
-                    {cell === null ? (
-                      <span className="text-text-muted italic">NULL</span>
-                    ) : (
-                      String(cell)
-                    )}
+                  <td key={j} className={cell === null ? 'nullcell' : ''}>
+                    {cell === null ? 'NULL' : String(cell)}
                   </td>
                 ))}
               </tr>
@@ -73,8 +67,8 @@ export default function ResultTable({ result, label, maxRows = 50, highlight = '
         </table>
       </div>
       {hasMore && (
-        <div className="px-3 py-1.5 text-xs text-text-muted border-t border-white/5">
-          ... e mais {result.rows.length - maxRows} linhas
+        <div className="faint text-[11.5px] mt-1.5">
+          … e mais {result.rows.length - maxRows} linhas
         </div>
       )}
     </div>

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { useGameStore } from '../store/gameStore';
-import { Trophy, Medal, Crown } from 'lucide-react';
+import Insignia from '../components/ui/Insignia';
+import Chip from '../components/ui/Chip';
+import { getRankChevrons } from '../types';
+import type { Rank } from '../types';
 
 interface LeaderEntry {
   username: string;
@@ -42,92 +45,108 @@ export default function LeaderboardPage() {
     load();
   }, []);
 
-  const getPositionIcon = (pos: number) => {
-    switch (pos) {
-      case 1: return <Crown className="w-5 h-5 text-neon-gold" />;
-      case 2: return <Medal className="w-5 h-5 text-gray-300" />;
-      case 3: return <Medal className="w-5 h-5 text-amber-600" />;
-      default: return <span className="w-5 h-5 flex items-center justify-center text-sm text-text-muted font-mono">{pos}</span>;
-    }
-  };
-
-  const getPositionStyle = (pos: number) => {
-    switch (pos) {
-      case 1: return 'border-neon-gold/30 bg-neon-gold/5';
-      case 2: return 'border-gray-300/20 bg-gray-300/5';
-      case 3: return 'border-amber-600/20 bg-amber-600/5';
-      default: return 'border-white/5 bg-transparent';
-    }
-  };
+  const podium = entries.length >= 3 ? [entries[1], entries[0], entries[2]] : [];
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Trophy className="w-6 h-6 text-neon-gold" />
-        <h1 className="text-2xl font-bold text-text-primary">Ranking Global</h1>
+    <div className="mx-auto max-w-[880px]">
+      {/* Header */}
+      <div className="fade-up text-center mb-[34px]">
+        <div className="eyebrow">Departamento · Reconhecimento</div>
+        <h1 className="display text-[clamp(30px,5vw,42px)] font-bold mt-2.5">Quadro de Honra</h1>
+        <p className="muted text-[15px] mt-2">Os agentes que mais encerraram casos.</p>
       </div>
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto" />
-          <p className="text-text-muted mt-3">Carregando ranking...</p>
+          <div className="w-8 h-8 border-2 border-line border-t-brass rounded-full animate-spin mx-auto" />
+          <p className="faint mt-3">Carregando ranking…</p>
         </div>
       ) : entries.length === 0 ? (
-        <div className="card bg-bg-secondary text-center py-8">
-          <p className="text-text-secondary">Nenhum agente no ranking ainda.</p>
-          <p className="text-sm text-text-muted mt-1">Resolva desafios para aparecer aqui!</p>
+        <div className="card text-center py-8">
+          <p className="muted">Nenhum agente no quadro ainda.</p>
+          <p className="faint text-sm mt-1">Encerre casos para aparecer aqui.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {entries.map(entry => {
-            const isCurrentUser = entry.username === user?.username;
-            return (
-              <div
-                key={entry.position}
-                className={`card flex items-center gap-4 transition-all ${
-                  getPositionStyle(entry.position)
-                } ${isCurrentUser ? 'ring-1 ring-neon-cyan/30' : ''}`}
-              >
-                {/* Position */}
-                <div className="flex-shrink-0 w-8 flex justify-center">
-                  {getPositionIcon(entry.position)}
-                </div>
+        <>
+          {/* Podium */}
+          {podium.length === 3 && (
+            <div className="flex items-end justify-center gap-4 mb-[38px]">
+              {podium.map(p => {
+                const isFirst = p.position === 1;
+                const height = p.position === 1 ? 132 : p.position === 2 ? 104 : 86;
+                return (
+                  <div key={p.position} className="flex flex-col items-center" style={{ flex: '0 1 200px' }}>
+                    <Insignia chevrons={getRankChevrons(p.rank as Rank)} size={isFirst ? 56 : 44} />
+                    <div
+                      className="display sec-h font-semibold mt-2 text-center"
+                      style={{ fontSize: isFirst ? 18 : 16 }}
+                    >
+                      {p.username}
+                    </div>
+                    <div className="faint mono text-[11.5px] mt-0.5">Nível {p.level}</div>
+                    <div
+                      className="w-full mt-3 flex flex-col items-center justify-center rounded-[14px] border"
+                      style={{
+                        height,
+                        background: isFirst ? 'var(--brass-glow)' : 'var(--panel)',
+                        borderColor: isFirst ? 'color-mix(in srgb, var(--brass) 40%, transparent)' : 'var(--line)',
+                      }}
+                    >
+                      <div
+                        className="display brass font-extrabold leading-none"
+                        style={{ fontSize: isFirst ? 38 : 30 }}
+                      >
+                        {p.position}º
+                      </div>
+                      <div className="mono text-ink-2 text-[12px] mt-1.5">{p.xp.toLocaleString('pt-BR')} XP</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-                {/* Avatar */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isCurrentUser ? 'bg-neon-cyan/20' : 'bg-surface'
-                }`}>
-                  <span className={`font-bold ${isCurrentUser ? 'text-neon-cyan' : 'text-text-secondary'}`}>
-                    {entry.username[0].toUpperCase()}
+          {/* List */}
+          <div className="card !p-1.5">
+            {entries.map((p, i) => {
+              const you = p.username === user?.username;
+              return (
+                <div
+                  key={p.position}
+                  className="flex items-center gap-4 px-4 py-3.5"
+                  style={{
+                    borderBottom: i < entries.length - 1 ? '1px solid var(--line)' : 0,
+                    background: you ? 'var(--brass-glow)' : 'transparent',
+                    borderRadius: you ? 8 : 0,
+                  }}
+                >
+                  <span
+                    className="display font-bold text-[18px] w-[34px]"
+                    style={{ color: p.position <= 3 ? 'var(--brass)' : 'var(--ink-3)' }}
+                  >
+                    {p.position}
+                  </span>
+                  <Insignia chevrons={getRankChevrons(p.rank as Rank)} size={30} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="display sec-h font-semibold text-[16px] truncate"
+                        style={{ color: you ? 'var(--brass-bright)' : 'var(--ink)' }}
+                      >
+                        {p.username}
+                      </span>
+                      {you && <Chip variant="brass">você</Chip>}
+                    </div>
+                    <div className="faint mono text-[11.5px] mt-0.5">{p.rank} · Nível {p.level}</div>
+                  </div>
+                  <span className="mono text-ink text-[13.5px] text-right" style={{ minWidth: 70 }}>
+                    {p.xp.toLocaleString('pt-BR')}
                   </span>
                 </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium truncate ${isCurrentUser ? 'text-neon-cyan' : 'text-text-primary'}`}>
-                      {entry.username}
-                    </span>
-                    {isCurrentUser && (
-                      <span className="text-xs bg-neon-cyan/10 text-neon-cyan px-1.5 py-0.5 rounded">
-                        Você
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-text-secondary">
-                    Nv.{entry.level} — {entry.rank}
-                  </div>
-                </div>
-
-                {/* XP */}
-                <div className="text-right">
-                  <div className="font-bold text-neon-gold font-mono">{entry.xp.toLocaleString()}</div>
-                  <div className="text-xs text-text-muted">XP</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

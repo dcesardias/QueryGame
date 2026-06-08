@@ -4,7 +4,7 @@ import { initSqlEngine, ensureReady, createDatabase, executeQuery } from '../ser
 import SqlEditor from '../components/SqlEditor';
 import ResultTable from '../components/ResultTable';
 import type { QueryResult } from '../types';
-import { ChevronRight, ChevronLeft, Terminal, Database, Search, Filter, Zap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Terminal, Database, Search, Filter, Zap, Check } from 'lucide-react';
 
 // Mini database for onboarding
 const ONBOARDING_DB = `
@@ -239,71 +239,60 @@ export default function OnboardingPage() {
     if (!isFirstStep) setCurrentStep(prev => prev - 1);
   };
 
-  // Progress dots
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const isCodeLine = (line: string) =>
+    line.startsWith('SELECT') || line.startsWith('→') || line.startsWith('>') ||
+    line.startsWith('*') || line.startsWith('=') || line.startsWith('<');
 
   return (
-    <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4 py-8">
-      {/* Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-neon-cyan/[0.02] via-transparent to-neon-magenta/[0.02]" />
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-neon-cyan/5 rounded-full blur-[120px]" />
+    <div className="min-h-screen flex flex-col">
+      {/* Top segmented progress */}
+      <div className="w-full max-w-[760px] mx-auto px-6 pt-[22px] flex items-center gap-1.5">
+        {steps.map((_, i) => (
+          <div
+            key={i}
+            className="flex-1 h-[3px] rounded-full transition-colors duration-300"
+            style={{ background: i <= currentStep ? 'var(--brass)' : 'var(--line-strong)' }}
+          />
+        ))}
       </div>
 
-      <div className="relative w-full max-w-2xl">
-        {/* Progress bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-text-muted font-mono">
-              Treinamento {currentStep + 1}/{steps.length}
-            </span>
+      <div className="flex-1 flex items-center justify-center px-6 py-8">
+        <div className="fade-up w-full max-w-[640px]" key={currentStep}>
+          {/* Eyebrow + skip */}
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="eyebrow">Recrutamento · Passo {currentStep + 1}/{steps.length}</div>
             <button
               onClick={() => {
                 localStorage.setItem('querygame_onboarding_done', 'true');
                 navigate('/');
               }}
-              className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+              className="kicker hover:text-ink-2 transition-colors"
             >
-              Pular introdução →
+              Pular →
             </button>
           </div>
-          <div className="h-1 bg-surface rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${progress}%`,
-                background: 'linear-gradient(90deg, #00f0ff, #ff00aa)',
-              }}
-            />
-          </div>
-        </div>
 
-        {/* Card */}
-        <div className="card bg-bg-secondary/80 backdrop-blur-sm border-neon-cyan/10">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-neon-cyan/10 flex items-center justify-center text-neon-cyan">
-              {step.icon}
-            </div>
-            <h2 className="text-xl font-bold text-text-primary">{step.title}</h2>
-          </div>
+          {/* Title */}
+          <h1 className="display text-[clamp(30px,6vw,46px)] font-bold leading-[1.05] tracking-tight mb-4">
+            {step.title}
+          </h1>
 
           {/* Narrative */}
-          <div className="bg-bg-primary/50 rounded-lg px-4 py-3 mb-4 border-l-2 border-neon-cyan/50">
-            <p className="text-text-primary text-sm leading-relaxed">{step.narrative}</p>
+          <div className="border-l-[3px] border-l-brass bg-panel-2 rounded-r-lg px-4 py-3 mb-4">
+            <p className="text-ink text-[14.5px] leading-relaxed m-0">{step.narrative}</p>
           </div>
 
           {/* Explanation */}
-          <div className="space-y-1.5 mb-5">
+          <div className="flex flex-col gap-1.5 mb-5">
             {step.explanation.map((line, i) =>
               line === '' ? (
                 <div key={i} className="h-2" />
-              ) : line.startsWith('SELECT') || line.startsWith('→') || line.startsWith('>') || line.startsWith('*') || line.startsWith('=') ? (
-                <p key={i} className="text-sm font-mono text-neon-cyan/90 bg-bg-primary/50 rounded px-3 py-1">
+              ) : isCodeLine(line) ? (
+                <p key={i} className="mono text-[13px] text-brass-bright bg-bg-deep border border-line rounded px-3 py-1.5 m-0">
                   {line}
                 </p>
               ) : (
-                <p key={i} className="text-sm text-text-secondary">{line}</p>
+                <p key={i} className="muted text-[14.5px] leading-relaxed m-0">{line}</p>
               )
             )}
           </div>
@@ -311,39 +300,40 @@ export default function OnboardingPage() {
           {/* Concept demo table */}
           {step.showTable && demoResult && (
             <div className="mb-5">
-              <div className="text-xs text-text-muted mb-1.5 font-mono">
-                {'>'} {step.conceptDemo}
-              </div>
+              <div className="kicker mb-1.5">{step.conceptDemo}</div>
               <ResultTable result={demoResult} highlight="neutral" maxRows={10} />
             </div>
           )}
 
           {/* Task */}
           {hasTask && dbReady && (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-neon-magenta">{step.task}</p>
+            <div className="flex flex-col gap-3">
+              <p className="brass text-[14px] font-semibold m-0">{step.task}</p>
 
               <SqlEditor value={code} onChange={setCode} onRun={handleRun} />
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleRun}
-                  disabled={!code.trim()}
-                  className="btn-primary flex items-center gap-2 text-sm"
-                >
+              <div className="flex flex-wrap items-center gap-3">
+                <button onClick={handleRun} disabled={!code.trim()} className="btn-primary">
                   Executar
                 </button>
 
                 {showHint && step.hint && (
-                  <div className="text-xs text-text-muted bg-neon-magenta/5 rounded-lg px-3 py-1.5 font-mono border border-neon-magenta/10">
-                    Dica: <span className="text-neon-magenta">{step.hint}</span>
-                  </div>
+                  <span className="faint mono text-[12px]">
+                    dica: <span className="brass">{step.hint}</span>
+                  </span>
                 )}
               </div>
 
-              {/* Feedback */}
+              {/* Feedback (error / wrong) */}
               {feedback && !taskCompleted && (
-                <div className="text-sm text-neon-red bg-neon-red/5 rounded-lg px-3 py-2">
+                <div
+                  className="text-[13.5px] px-3.5 py-2.5 rounded-lg"
+                  style={{
+                    color: 'var(--oxblood)',
+                    border: '1px solid color-mix(in srgb, var(--oxblood) 45%, transparent)',
+                    background: 'color-mix(in srgb, var(--oxblood) 12%, var(--panel))',
+                  }}
+                >
                   {feedback}
                 </div>
               )}
@@ -359,46 +349,27 @@ export default function OnboardingPage() {
 
               {/* Success */}
               {taskCompleted && (
-                <div className="text-sm text-neon-green bg-neon-green/5 rounded-lg px-3 py-2 border border-neon-green/20">
-                  Correto! Você está pegando o jeito.
+                <div className="flex items-center gap-2 sage-t text-[14px] font-semibold">
+                  <Check size={18} strokeWidth={2.4} />
+                  Perfeito. Você está pegando o jeito.
                 </div>
               )}
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
-            <button
-              onClick={goBack}
-              disabled={isFirstStep}
-              className={`flex items-center gap-1 text-sm transition-colors ${
-                isFirstStep ? 'text-text-muted cursor-default' : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Voltar
-            </button>
-
-            <button
-              onClick={goNext}
-              disabled={hasTask && !taskCompleted}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-all ${
-                hasTask && !taskCompleted
-                  ? 'text-text-muted cursor-default'
-                  : isLastStep
-                    ? 'btn-primary'
-                    : 'text-neon-cyan hover:glow-text-cyan'
-              }`}
-            >
-              {isLastStep ? 'Começar os casos!' : 'Próximo'}
-              <ChevronRight className="w-4 h-4" />
+          <div className="flex items-center gap-3.5 mt-7">
+            {!isFirstStep && (
+              <button onClick={goBack} className="btn-secondary">
+                <ChevronLeft size={15} />
+                Voltar
+              </button>
+            )}
+            <button onClick={goNext} disabled={hasTask && !taskCompleted} className="btn-primary">
+              {isLastStep ? 'Entrar na Central' : 'Próximo'}
+              <ChevronRight size={15} />
             </button>
           </div>
-        </div>
-
-        {/* Decorative */}
-        <div className="mt-4 font-mono text-xs text-text-muted/30 text-center">
-          {'>'} DIA Training Protocol v1.0 — SQL Fundamentals
         </div>
       </div>
     </div>

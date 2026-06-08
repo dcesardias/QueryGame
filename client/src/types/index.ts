@@ -141,12 +141,18 @@ export function getXpForNextLevel(currentLevel: number): number {
   return Math.floor(100 * currentLevel * 1.2);
 }
 
-export function getRankIcon(rank: Rank): string {
+/** Map a challenge difficulty (1–8 in the dataset) onto the 1–5 pip scale. */
+export function difficultyToPips(difficulty: number): number {
+  return Math.max(1, Math.min(5, Math.ceil((difficulty / 8) * 5)));
+}
+
+/** Brass chevron count for a rank's <Insignia> (0–4). */
+export function getRankChevrons(rank: Rank): number {
   switch (rank) {
-    case 'Estagiário': return '🔰';
-    case 'Detetive Junior': return '🔍';
-    case 'Detetive Sênior': return '🕵️';
-    case 'Inspetor': return '⭐';
-    case 'Inspetor-Chefe': return '👑';
+    case 'Estagiário': return 0;
+    case 'Detetive Junior': return 1;
+    case 'Detetive Sênior': return 2;
+    case 'Inspetor': return 3;
+    case 'Inspetor-Chefe': return 4;
   }
 }

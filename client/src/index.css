@@ -2,97 +2,448 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #334155 #0a0e1a;
-  }
+/* ============================================================
+   QueryGame — Noir Cinematic Design System (tokens)
+   Dark  = "After hours at the DIA" (noir office, spotlight, brass)
+   Light = "The case file on the desk" (manila dossier, ink, stamp)
+   Values mirror referencia/querygame/styles.css.
+   ============================================================ */
 
-  *::-webkit-scrollbar {
-    width: 6px;
-  }
+:root {
+  /* ---- DARK (default) ---- */
+  --bg:            #14110b;
+  --bg-deep:       #0e0c07;
+  --panel:         #1d1810;
+  --panel-2:       #241e14;
+  --panel-raised:  #2a2317;
+  --line:          rgba(214, 168, 98, 0.13);
+  --line-strong:   rgba(214, 168, 98, 0.26);
 
-  *::-webkit-scrollbar-track {
-    background: #0a0e1a;
-  }
+  --ink:           #efe6d3;
+  --ink-2:         #b6aa91;
+  --ink-3:         #847a67;
 
-  *::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 3px;
-  }
+  --brass:         #d8a64e;
+  --brass-bright:  #efc173;
+  --brass-deep:    #a87d34;
+  --brass-glow:    rgba(216, 166, 78, 0.22);
 
-  ::selection {
-    background: rgba(0, 240, 255, 0.3);
-    color: #e2e8f0;
-  }
+  --oxblood:       #c2503c;
+  --oxblood-deep:  #9c3b2b;
+  --sage:          #8aa765;   /* solved / success, desaturated */
+  --sage-deep:     #5e7a44;
+
+  --grain-opacity: 0.05;
+  --spotlight:     radial-gradient(120% 90% at 50% -10%, rgba(216,166,78,0.10), transparent 55%);
+
+  --shadow-soft:   0 1px 0 rgba(255,255,255,0.02), 0 18px 40px -24px rgba(0,0,0,0.8);
+  --shadow-lift:   0 30px 60px -30px rgba(0,0,0,0.9);
+
+  --r-sm: 4px;
+  --r:    8px;
+  --r-lg: 14px;
+  --maxw: 1180px;
+
+  --font-display: 'Spectral', Georgia, serif;
+  --font-ui:      'Archivo', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+}
+
+[data-theme="light"] {
+  --bg:            #e7dcc4;
+  --bg-deep:       #ddd0b3;
+  --panel:         #f5eedd;
+  --panel-2:       #efe6d0;
+  --panel-raised:  #fbf6e9;
+  --line:          rgba(80, 64, 38, 0.18);
+  --line-strong:   rgba(80, 64, 38, 0.34);
+
+  --ink:           #2b2418;
+  --ink-2:         #6a5d44;
+  --ink-3:         #978a6e;
+
+  --brass:         #a6772a;
+  --brass-bright:  #c08f3c;
+  --brass-deep:    #7c5818;
+  --brass-glow:    rgba(166, 119, 42, 0.16);
+
+  --oxblood:       #b03a2a;
+  --oxblood-deep:  #8c2c1f;
+  --sage:          #5c7a3c;
+  --sage-deep:     #46612b;
+
+  --grain-opacity: 0.07;
+  --spotlight:     radial-gradient(120% 90% at 50% -10%, rgba(166,119,42,0.10), transparent 55%);
+
+  --shadow-soft:   0 1px 0 rgba(255,255,255,0.4), 0 14px 30px -22px rgba(60,44,20,0.5);
+  --shadow-lift:   0 26px 50px -28px rgba(60,44,20,0.45);
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--brass-deep); }
+
+::selection { background: var(--brass-glow); color: var(--ink); }
+
+/* ---------- Texture overlays (fixed, non-interactive, behind content) ---------- */
+.qg-grain {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+}
+.qg-spot {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--spotlight);
+}
+.qg-app { position: relative; z-index: 1; }
+
+/* ---------- Typography helpers ---------- */
+.display { font-family: var(--font-display); }
+.mono { font-family: var(--font-mono); }
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  color: var(--brass);
+  font-weight: 500;
+}
+.kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+/* ---------- Hairline / dossier rules ---------- */
+.rule { height: 1px; background: var(--line); border: 0; }
+.rule-strong { height: 1px; background: var(--line-strong); border: 0; }
+.dashed-rule { height: 0; border: 0; border-top: 1px dashed var(--line-strong); }
+
+/* ---------- Misc text colors ---------- */
+.sec-h { white-space: nowrap; }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.brass { color: var(--brass); }
+.ox { color: var(--oxblood); }
+.sage-t { color: var(--sage); }
+
+/* ---------- Screen entrance (final state is the visible default) ---------- */
+.fade-up { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .fade-up { animation: fadeUp 0.5s ease; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 @layer components {
+  /* Primary action — brass gradient */
   .btn-primary {
-    @apply bg-neon-cyan text-bg-primary font-semibold px-6 py-2.5 rounded-lg
-           transition-all duration-200 hover:shadow-neon-cyan hover:brightness-110
-           active:scale-95 disabled:bg-surface-hover disabled:text-text-muted
-           disabled:shadow-none disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 font-semibold whitespace-nowrap cursor-pointer
+           transition-all duration-150 disabled:cursor-not-allowed;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--r);
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+    color: #1a1206;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 24px -12px var(--brass-glow);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 14px 30px -10px var(--brass-glow);
+  }
+  .btn-primary:active { transform: translateY(1px) scale(0.99); }
+  .btn-primary:disabled {
+    background: var(--panel-2);
+    color: var(--ink-3);
+    box-shadow: none;
+    filter: none;
   }
 
+  /* Secondary action — ghost that lights up brass on hover */
   .btn-secondary {
-    @apply border border-neon-cyan text-neon-cyan px-6 py-2.5 rounded-lg
-           bg-transparent transition-all duration-200
-           hover:bg-neon-cyan/10 hover:shadow-neon-cyan
-           active:scale-95;
+    @apply inline-flex items-center gap-2 font-semibold whitespace-nowrap cursor-pointer
+           transition-all duration-150;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1;
+    padding: 11px 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    background: transparent;
+    color: var(--ink);
   }
+  .btn-secondary:hover {
+    border-color: var(--brass);
+    color: var(--brass-bright);
+    background: var(--brass-glow);
+  }
+  .btn-secondary:active { transform: translateY(1px) scale(0.99); }
 
+  /* Solve / next action — sage gradient */
+  .btn-solve {
+    @apply inline-flex items-center gap-2 font-semibold whitespace-nowrap cursor-pointer
+           transition-all duration-150;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--r);
+    background: linear-gradient(180deg, var(--sage), var(--sage-deep));
+    color: #0e1206;
+    box-shadow: 0 10px 24px -14px rgba(138, 167, 101, 0.5);
+  }
+  .btn-solve:hover { filter: brightness(1.06); }
+  .btn-solve:active { transform: translateY(1px) scale(0.99); }
+
+  /* Compact button modifier */
+  .btn-sm { padding: 8px 13px; font-size: 12.5px; }
+
+  /* Panel / card */
   .card {
-    @apply bg-surface rounded-xl border border-white/5 p-5
-           transition-all duration-200;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.16s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
-
   .card-hover {
-    @apply card hover:border-neon-cyan/30 hover:shadow-neon-cyan cursor-pointer;
+    cursor: pointer;
   }
-
-  .glow-text-cyan {
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-  }
-
-  .glow-text-green {
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-  }
-
-  .glow-text-gold {
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-  }
-
-  .glow-text-magenta {
-    text-shadow: 0 0 10px rgba(255, 0, 170, 0.5);
+  .card-hover:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-lift);
   }
 }
 
-/* CodeMirror theme overrides */
+/* ============================================================
+   Noir UI components (PR 2) — mirror referencia/querygame/styles.css
+   Used by components/ui/{Insignia,Stamp,Bar,Pips,Chip}.tsx
+   ============================================================ */
+
+/* ---------- Insignia (rank badge) ---------- */
+.insignia { display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---------- Stamp ---------- */
+.stamp {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  border: 2.5px solid var(--oxblood);
+  color: var(--oxblood);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px;
+  transform: rotate(-7deg);
+  opacity: 0.92;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--oxblood) 30%, transparent);
+}
+.stamp.stamp-solved { border-color: var(--sage); color: var(--sage); }
+.stamp.stamp-priority { border-color: var(--oxblood); color: var(--oxblood); }
+
+/* ---------- Chips ---------- */
+.chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.chip-brass { color: var(--brass); border-color: color-mix(in srgb, var(--brass) 40%, transparent); }
+.chip-ox { color: var(--oxblood); border-color: color-mix(in srgb, var(--oxblood) 45%, transparent); }
+.chip-sage { color: var(--sage); border-color: color-mix(in srgb, var(--sage) 45%, transparent); }
+
+/* ---------- Difficulty pips ---------- */
+.pips { display: inline-flex; gap: 3px; align-items: center; }
+.pip { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); }
+.pip.on { background: var(--brass); }
+.pip.on.ox { background: var(--oxblood); }
+
+/* ---------- Progress bar ---------- */
+.bar {
+  height: 6px;
+  background: var(--bg-deep);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brass-deep), var(--brass-bright));
+  transition: width 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.bar.sage > span { background: linear-gradient(90deg, var(--sage-deep), var(--sage)); }
+
+/* ---------- Case card (archive grid, PR 5) ---------- */
+.case-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 18px 16px;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  overflow: hidden;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-ui);
+  color: inherit;
+  display: flex; flex-direction: column; gap: 12px; min-height: 150px;
+}
+.case-card::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--line-strong); transition: background 0.2s ease;
+}
+.case-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
+.case-card.is-available::before { background: var(--brass); }
+.case-card.is-available:hover::before { background: var(--brass-bright); }
+.case-card.is-solved::before { background: var(--sage); }
+.case-card.is-boss::before { background: var(--oxblood); width: 4px; }
+.case-card.is-locked { cursor: not-allowed; opacity: 0.55; }
+.case-card.is-locked:hover { transform: none; box-shadow: none; }
+
+/* ============================================================
+   Case-screen pieces (PR 3) — editor chrome + data table
+   ============================================================ */
+
+/* ---------- Editor chrome ---------- */
+.editor-shell {
+  background: var(--bg-deep);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.editor-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+/* ---------- Data table ("Arquivo de dados" results) ---------- */
+.qtable { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; }
+.qtable th {
+  text-align: left; padding: 9px 12px; color: var(--brass);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10.5px;
+  border-bottom: 1px solid var(--line-strong); white-space: nowrap;
+  background: var(--panel-2);
+}
+.qtable td { padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+.qtable tr:last-child td { border-bottom: 0; }
+.qtable tr:hover td { background: color-mix(in srgb, var(--brass) 5%, transparent); color: var(--ink); }
+.qtable .nullcell { color: var(--ink-3); font-style: italic; opacity: 0.7; }
+.qtable-wrap { overflow: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.qtable-wrap.ok { border-color: color-mix(in srgb, var(--sage) 55%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sage) 25%, transparent); }
+.qtable-wrap.bad { border-color: color-mix(in srgb, var(--oxblood) 45%, transparent); }
+
+/* ============================================================
+   Topbar + nav + XP popup (PR 8)
+   ============================================================ */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  border-bottom: 1px solid var(--line);
+}
+.nav-link {
+  font-family: var(--font-ui); font-size: 13.5px; font-weight: 500;
+  color: var(--ink-2); cursor: pointer; padding: 6px 2px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 7px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  background: none; border-top: 0; border-left: 0; border-right: 0;
+}
+.nav-link:hover { color: var(--ink); }
+.nav-link.active { color: var(--brass-bright); border-bottom-color: var(--brass); }
+
+.xp-pop { position: fixed; top: 84px; right: 28px; z-index: 60; }
+@media (prefers-reduced-motion: no-preference) {
+  .xp-pop { animation: xpFloat 2.6s ease forwards; }
+}
+@keyframes xpFloat {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.95); }
+  12%  { opacity: 1; transform: translateY(0) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* ---------- CodeMirror — noir reskin ---------- */
 .cm-editor {
-  background: #111827 !important;
-  border-radius: 0.75rem;
+  background: var(--bg-deep) !important;
+  border-radius: var(--r);
   font-size: 14px;
+  color: var(--ink);
+}
+
+.cm-editor .cm-content {
+  font-family: var(--font-mono);
+  caret-color: var(--brass-bright);
+  color: var(--ink);
 }
 
 .cm-editor .cm-gutters {
-  background: #0a0e1a !important;
-  border-right: 1px solid #1e293b !important;
-  color: #64748b !important;
+  background: var(--bg) !important;
+  border-right: 1px solid var(--line) !important;
+  color: var(--ink-3) !important;
 }
 
 .cm-editor .cm-activeLineGutter {
-  background: #1e293b !important;
+  background: var(--panel) !important;
 }
 
 .cm-editor .cm-activeLine {
-  background: rgba(0, 240, 255, 0.05) !important;
+  background: color-mix(in srgb, var(--brass) 6%, transparent) !important;
 }
 
-.cm-editor .cm-selectionBackground {
-  background: rgba(0, 240, 255, 0.15) !important;
+.cm-editor .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionBackground {
+  background: var(--brass-glow) !important;
 }
 
 .cm-editor .cm-cursor {
-  border-left-color: #00f0ff !important;
+  border-left-color: var(--brass-bright) !important;
 }

@@ -3,12 +3,14 @@ import { Database, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface TableSchema {
   name: string;
+  note: string;
   columns: { name: string; type: string; pk?: boolean }[];
 }
 
 const INVESTIGATION_SCHEMA: TableSchema[] = [
   {
     name: 'suspects',
+    note: 'Pessoas sob investigação',
     columns: [
       { name: 'id', type: 'INTEGER', pk: true },
       { name: 'name', type: 'TEXT' },
@@ -21,6 +23,7 @@ const INVESTIGATION_SCHEMA: TableSchema[] = [
   },
   {
     name: 'crimes',
+    note: 'Ocorrências registradas',
     columns: [
       { name: 'id', type: 'INTEGER', pk: true },
       { name: 'type', type: 'TEXT' },
@@ -33,6 +36,7 @@ const INVESTIGATION_SCHEMA: TableSchema[] = [
   },
   {
     name: 'suspect_crimes',
+    note: 'Vínculos suspeito–ocorrência',
     columns: [
       { name: 'suspect_id', type: 'INTEGER', pk: true },
       { name: 'crime_id', type: 'INTEGER', pk: true },
@@ -41,6 +45,7 @@ const INVESTIGATION_SCHEMA: TableSchema[] = [
   },
   {
     name: 'evidence',
+    note: 'Provas coletadas em campo',
     columns: [
       { name: 'id', type: 'INTEGER', pk: true },
       { name: 'crime_id', type: 'INTEGER' },
@@ -52,6 +57,7 @@ const INVESTIGATION_SCHEMA: TableSchema[] = [
   },
   {
     name: 'detectives',
+    note: 'Agentes da DIA',
     columns: [
       { name: 'id', type: 'INTEGER', pk: true },
       { name: 'name', type: 'TEXT' },
@@ -62,6 +68,7 @@ const INVESTIGATION_SCHEMA: TableSchema[] = [
   },
   {
     name: 'case_assignments',
+    note: 'Designações de agentes',
     columns: [
       { name: 'detective_id', type: 'INTEGER', pk: true },
       { name: 'crime_id', type: 'INTEGER', pk: true },
@@ -77,40 +84,48 @@ export default function SchemaViewer() {
     setExpanded(prev => ({ ...prev, [name]: !prev[name] }));
 
   return (
-    <div className="card bg-bg-secondary border-white/5">
+    <div className="rounded-[14px] border border-line bg-panel p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Database className="w-4 h-4 text-neon-cyan" />
-        <h3 className="text-sm font-semibold text-text-primary">Schema do Banco</h3>
+        <Database size={15} className="text-brass" />
+        <span className="eyebrow">Arquivo de dados</span>
       </div>
-      <div className="space-y-1">
-        {INVESTIGATION_SCHEMA.map(table => (
-          <div key={table.name}>
-            <button
-              onClick={() => toggle(table.name)}
-              className="flex items-center gap-1.5 w-full text-left px-2 py-1 rounded hover:bg-white/5 transition-colors"
-            >
-              {expanded[table.name] ? (
-                <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
-              )}
-              <span className="text-sm font-mono text-neon-cyan">{table.name}</span>
-            </button>
-            {expanded[table.name] && (
-              <div className="ml-6 mt-0.5 mb-1 space-y-0.5">
-                {table.columns.map(col => (
-                  <div key={col.name} className="flex items-center gap-2 text-xs font-mono px-2 py-0.5">
-                    <span className={col.pk ? 'text-neon-gold' : 'text-text-primary'}>
+      <div className="flex flex-col gap-1.5">
+        {INVESTIGATION_SCHEMA.map(table => {
+          const isOpen = !!expanded[table.name];
+          return (
+            <div key={table.name} className="overflow-hidden rounded-lg border border-line bg-panel-2">
+              <button
+                onClick={() => toggle(table.name)}
+                className="flex w-full items-center justify-between px-3 py-2 text-left"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="mono text-[13px] font-semibold text-brass-bright">{table.name}</span>
+                  <span className="faint text-[11px] truncate">{table.note}</span>
+                </span>
+                {isOpen ? (
+                  <ChevronDown size={14} className="text-ink-3 shrink-0" />
+                ) : (
+                  <ChevronRight size={14} className="text-ink-3 shrink-0" />
+                )}
+              </button>
+              {isOpen && (
+                <div className="flex flex-wrap gap-1.5 px-3 pb-3 pt-0.5">
+                  {table.columns.map(col => (
+                    <span
+                      key={col.name}
+                      title={`${col.type}${col.pk ? ' · PK' : ''}`}
+                      className={`mono rounded-[5px] border border-line bg-bg-deep px-[7px] py-0.5 text-[11px] ${
+                        col.pk ? 'text-brass' : 'text-ink-2'
+                      }`}
+                    >
                       {col.name}
                     </span>
-                    <span className="text-text-muted">{col.type}</span>
-                    {col.pk && <span className="text-neon-gold text-[10px]">PK</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
