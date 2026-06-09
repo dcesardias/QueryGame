@@ -16,18 +16,20 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'username', 'Agent_' || LEFT(NEW.id::TEXT, 8))
   );
 
-  -- Unlock first level challenges
+  -- Mastery gate: os casos regulares do nível 1 já vêm liberados juntos
+  -- (o aluno escolhe a ordem). O caso prioritário 1-10 (boss) só é liberado
+  -- pelo app quando ≥80% dos regulares estiverem resolvidos.
   INSERT INTO public.challenge_progress (user_id, challenge_id, status)
   VALUES
     (NEW.id, '1-1', 'available'),
-    (NEW.id, '1-2', 'locked'),
-    (NEW.id, '1-3', 'locked'),
-    (NEW.id, '1-4', 'locked'),
-    (NEW.id, '1-5', 'locked'),
-    (NEW.id, '1-6', 'locked'),
-    (NEW.id, '1-7', 'locked'),
-    (NEW.id, '1-8', 'locked'),
-    (NEW.id, '1-9', 'locked'),
+    (NEW.id, '1-2', 'available'),
+    (NEW.id, '1-3', 'available'),
+    (NEW.id, '1-4', 'available'),
+    (NEW.id, '1-5', 'available'),
+    (NEW.id, '1-6', 'available'),
+    (NEW.id, '1-7', 'available'),
+    (NEW.id, '1-8', 'available'),
+    (NEW.id, '1-9', 'available'),
     (NEW.id, '1-10', 'locked');
 
   RETURN NEW;

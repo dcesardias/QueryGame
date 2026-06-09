@@ -47,7 +47,7 @@
 | 1.9 | Selecionar colunas específicas | SELECT col1, col2 | Projeção |
 | 1.10 | Boss: Relatório completo do caso | Combina tudo | Avaliação de mastery |
 
-**Critério de avanço**: 8/10 corretos (80% mastery threshold).
+**Critério de avanço**: resolver ≥80% dos casos regulares (8 de 9) libera o caso prioritário (boss); encerrar o boss abre o próximo nível. Os 9 casos regulares ficam disponíveis juntos — o aluno escolhe a ordem e nunca fica preso num único caso.
 
 ### Nível 2 — Intermediário (Rank: Detetive Junior)
 **Conceitos**: COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING, DISTINCT, aliases.
@@ -120,11 +120,12 @@
 
 | Tipo de Erro | Feedback | Exemplo |
 |-------------|----------|---------|
-| Sintaxe SQL | Tradução amigável | "Parece que falta uma vírgula entre as colunas" |
-| Resultado errado (linhas) | Diff de contagem | "Esperado: 5 linhas. Obtido: 12 linhas. Revise seus filtros." |
-| Resultado errado (colunas) | Diff de colunas | "Seu resultado tem colunas extras. Confira o SELECT." |
-| Resultado errado (valores) | Primeira diferença | "Linha 3 difere: esperado 'São Paulo', obtido 'Rio'" |
-| Resultado errado (ordem) | Hint de ordem | "Valores corretos, mas em ordem diferente. Confira ORDER BY." |
+| Sintaxe SQL | Tradução amigável | "Erro de sintaxe próximo a 'FORM'. Verifique a escrita do comando." |
+| Resultado errado (nº de colunas) | Diff de contagem | "Número de colunas diferente. Esperado: 3, obtido: 2. Confira quais colunas você colocou no SELECT." |
+| Resultado errado (valores) | Primeira diferença | "Linha 3, coluna 'city': esperado 'São Paulo', obtido 'Rio'." |
+| Resultado errado (linhas) | Diff de contagem | "Número de linhas diferente. Esperado: 5, obtido: 12. Revise seus filtros." |
+
+> **Correção por equivalência de resultado.** A banca compara os **dados** das células e a **quantidade** de colunas — **não** os nomes/aliases. Logo `COUNT(*)` e `COUNT(*) AS total` valem igual, e o aluno pode escolher os próprios apelidos. Os nomes só são exigidos no desafio que ensina ALIASES (2-7), cujo enunciado diz quais nomes usar (flag `enforceColumnNames`). A **ordem das linhas** só é cobrada quando o gabarito a define (ou via flag `orderMatters`); nunca é inferida da query do aluno, então adicionar um `ORDER BY` extra jamais reprova uma resposta correta.
 
 ---
 
@@ -179,7 +180,7 @@ Dificuldade
 
 ### Regras Anti-Frustração
 
-1. **Máximo de 3 tentativas antes de hint automático** — não deixa o aluno preso
+1. **Conceito ensinado antes da tentativa + dicas progressivas** — cada desafio abre com um cartão "Conceito" (definição + sintaxe + exemplo) e a 1ª pista da linha de raciocínio já visível. A cada erro, uma pista a mais é revelada (e o aluno pode pedir "Próxima dica" a qualquer momento). A explicação nunca fica trancada atrás do fracasso.
 2. **Após 5 erros no mesmo desafio** → oferece "pular e voltar depois"
 3. **Conceitos difíceis** → desafios de aquecimento antes de repetir o problema
 4. **Streak protector** → 1 erro não quebra streak (sistema de "escudo")
@@ -189,9 +190,32 @@ Dificuldade
 
 ## 5. Princípios Pedagógicos Aplicados
 
-1. **Zero teoria sem prática**: cada conceito é introduzido POR um desafio, não antes dele
-2. **Scaffolding progressivo**: primeiros desafios de cada conceito são "completar query", depois "escrever do zero"
+1. **Teoria mínima, na hora certa**: cada desafio abre com um cartão "Conceito" curto (definição + sintaxe + exemplo) do conceito-alvo, imediatamente seguido pela prática — sem aula longa antes
+2. **Scaffolding progressivo**: cartão de conceito → comentário-guia no editor (`initialCode`) → linha de raciocínio que revela uma pista por vez → solução completa na última pista
 3. **Contexto narrativo**: cada query resolve um pedaço do "caso" — motivação intrínseca
 4. **Feedback imediato**: cérebro aprende melhor quando o loop ação→resultado é < 2 segundos
 5. **Errar é seguro**: penalidade leve (perder um pouco de XP), nunca perde progresso permanente
-6. **Variação de formato**: corrigir, completar, escrever, otimizar — combate monotonia
+6. **Variação de formato** *(aspiracional)*: corrigir, completar, escrever, otimizar — hoje todos os desafios são do tipo "escrever"; os demais formatos ainda não foram implementados
+
+---
+
+## 6. Estado de implementação
+
+Este documento mistura o que **já existe** com o que é **visão de produto**. Para evitar confusão entre quem mantém o projeto e a realidade do código:
+
+### Implementado
+- **PBL / narrativa investigativa**: 38 "casos" em 4 níveis (`client/src/data/challenges.ts`).
+- **Onboarding** de SELECT/FROM/WHERE (`client/src/pages/Onboarding.tsx`).
+- **Cartão de Conceito por desafio** (`client/src/data/lessons.ts`) — ensina antes da tentativa.
+- **Linha de raciocínio progressiva** — 1ª pista visível, mais pistas a cada erro.
+- **Correção por equivalência de resultado** (`client/src/services/sqlEngine.ts`) — ignora nomes de coluna; ordem só quando o gabarito a define.
+- **Mastery gate de 80%** (`client/src/store/gameStore.ts` + `supabase/trigger.sql`/`mastery_gate.sql`): os casos regulares de um nível ficam liberados juntos; o caso prioritário (boss) abre com ≥80% dos regulares resolvidos (nível 1/2 → 8 de 9; nível 3/4 → 6 de 7) e é o gate para o próximo nível.
+- **Feedback imediato** com diff de colunas/linhas/valores e tradução de erros de sintaxe.
+- **Gamificação**: XP (vindo do dataset do desafio), ranks, leaderboard, missões diárias.
+
+### Ainda aspiracional (não implementado)
+- **Spaced repetition / "concept health" (seção 4)**: a `concept_health` é gravada e exibida ("Memória de campo"), mas não há motor que reintroduza casos em intervalos crescentes nem missões que priorizem conceitos fracos.
+- **Dificuldade adaptativa** (pular casos fáceis automaticamente) e **streak shield** consumido na quebra de streak (seção 4): não implementados.
+- **Formatos "completar/corrigir/otimizar"** (princípio 6): só existe "escrever".
+
+> Ao implementar qualquer item aspiracional, mover a linha correspondente para "Implementado" e referenciar o arquivo.

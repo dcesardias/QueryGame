@@ -50,6 +50,13 @@ function LevelSection({ level, progress }: {
   const solved = cases.filter(c => progress[c.id]?.status === 'completed').length;
   const total = cases.length;
 
+  // Mastery gate: o caso prioritário (boss) abre com ≥80% dos regulares.
+  const regulars = cases.filter(c => !c.isBoss);
+  const boss = cases.find(c => c.isBoss);
+  const completedRegulars = regulars.filter(c => progress[c.id]?.status === 'completed').length;
+  const masteryNeeded = Math.ceil(regulars.length * 0.8);
+  const bossLocked = !!boss && (progress[boss.id]?.status ?? 'locked') === 'locked';
+
   return (
     <div style={{ opacity: locked ? 0.92 : 1 }}>
       {/* Manila tab header */}
@@ -79,9 +86,17 @@ function LevelSection({ level, progress }: {
           </div>
         </div>
         {!locked && (
-          <div className="flex items-center gap-2.5">
-            <span className="faint mono text-[12px]">{solved}/{total}</span>
-            <div className="w-[90px]"><Bar value={solved} max={total} sage={total > 0 && solved === total} /></div>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2.5">
+              <span className="faint mono text-[12px]">{solved}/{total}</span>
+              <div className="w-[90px]"><Bar value={solved} max={total} sage={total > 0 && solved === total} /></div>
+            </div>
+            {bossLocked && (
+              <span className="faint text-[11.5px]">
+                <Lock size={11} className="inline -mt-0.5 mr-1 text-ink-3" />
+                Caso prioritário abre com {masteryNeeded} de {regulars.length} resolvidos ({completedRegulars}/{masteryNeeded})
+              </span>
+            )}
           </div>
         )}
       </div>

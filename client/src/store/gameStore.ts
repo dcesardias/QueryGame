@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
+import { getChallengeById, getChallengesByLevel } from '../data/challenges';
 import type { PlayerStats, ChallengeProgress, DailyMission, Badge, Rank, ConceptHealth } from '../types';
+
+// Mastery gate: fração dos casos regulares (não-boss) de um nível que precisa
+// estar resolvida para liberar o caso prioritário (boss) daquele nível.
+const MASTERY_RATIO = 0.8;
+
+/** Quantos casos regulares de um nível são necessários para abrir o boss. */
+export function masteryThreshold(level: number): number {
+  const regulars = getChallengesByLevel(level).filter(c => !c.isBoss).length;
+  return Math.ceil(regulars * MASTERY_RATIO);
+}
 
 function getRankForLevel(level: number): Rank {
   if (level <= 5) return 'Estagiário';
@@ -337,8 +348,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       const alreadyCompleted = existing && existing.status === 'completed';
 
       if (!alreadyCompleted) {
-        const isBoss = challengeId.endsWith('-10') || challengeId.endsWith('-8');
-        xpGained = isBoss ? 150 : 50;
+        // XP e tipo vêm do dataset do desafio — não de heurística no id
+        // (o `endsWith('-8')` antigo dava 150 XP indevido a 1-8 e 2-8).
+        const challengeDef = getChallengeById(challengeId);
+        const isBoss = challengeDef?.isBoss ?? false;
+        xpGained = challengeDef?.xpReward ?? (isBoss ? 150 : 50);
 
         // Perfect = zero previous attempts (this is the first try)
         if (previousAttempts === 0) {
@@ -353,33 +367,58 @@ export const useGameStore = create<GameState>((set, get) => ({
           best_time_ms: (!existing?.best_time_ms || timeMs < existing.best_time_ms) ? timeMs : existing.best_time_ms,
         }).eq('user_id', user.id).eq('challenge_id', challengeId);
 
-        // Unlock next challenge
-        const parts = challengeId.split('-');
-        const levelNum = parseInt(parts[0]);
-        const challengeNum = parseInt(parts[1]);
-        const nextId = `${levelNum}-${challengeNum + 1}`;
+        // ── Mastery gate ──────────────────────────────────────────────
+        // Os casos regulares de um nível já vêm liberados juntos (o aluno
+        // escolhe a ordem e não fica preso num único caso). O caso prioritário
+        // (boss) só abre com ≥80% dos regulares resolvidos — e é ele que
+        // destrava o próximo nível.
+        const levelNum = challengeDef?.level ?? parseInt(challengeId.split('-')[0]);
+        const levelChallenges = getChallengesByLevel(levelNum);
+        const regulars = levelChallenges.filter(c => !c.isBoss);
+        const boss = levelChallenges.find(c => c.isBoss);
 
-        const { data: nextExist } = await supabase
+        const { data: levelProg } = await supabase
           .from('challenge_progress')
-          .select('*')
+          .select('challenge_id, status')
           .eq('user_id', user.id)
-          .eq('challenge_id', nextId)
-          .single();
+          .in('challenge_id', levelChallenges.map(c => c.id));
 
-        if (nextExist && nextExist.status === 'locked') {
-          await supabase.from('challenge_progress').update({ status: 'available' })
-            .eq('user_id', user.id).eq('challenge_id', nextId);
-        } else if (!nextExist && isBoss) {
-          // Unlock next level
-          const nextLevel = levelNum + 1;
-          if (nextLevel <= 4) {
-            const count = nextLevel <= 3 ? 10 : 8;
-            const rows = Array.from({ length: count }, (_, i) => ({
-              user_id: user.id,
-              challenge_id: `${nextLevel}-${i + 1}`,
-              status: i === 0 ? 'available' : 'locked',
-            }));
-            await supabase.from('challenge_progress').insert(rows);
+        const completedRegulars = regulars.filter(r =>
+          levelProg?.some(p => p.challenge_id === r.id && p.status === 'completed')
+        ).length;
+        const needed = Math.ceil(regulars.length * MASTERY_RATIO);
+
+        if (!isBoss && boss && completedRegulars >= needed) {
+          // Atingiu a mastery → libera o caso prioritário
+          const bossProg = levelProg?.find(p => p.challenge_id === boss.id);
+          if (!bossProg) {
+            await supabase.from('challenge_progress').insert({
+              user_id: user.id, challenge_id: boss.id, status: 'available',
+            });
+          } else if (bossProg.status === 'locked') {
+            await supabase.from('challenge_progress').update({ status: 'available' })
+              .eq('user_id', user.id).eq('challenge_id', boss.id);
+          }
+        }
+
+        if (isBoss) {
+          // Boss resolvido → abre o próximo nível (regulares liberados, boss travado)
+          const nextChallenges = getChallengesByLevel(levelNum + 1);
+          if (nextChallenges.length > 0) {
+            const { data: existingNext } = await supabase
+              .from('challenge_progress')
+              .select('challenge_id')
+              .eq('user_id', user.id)
+              .in('challenge_id', nextChallenges.map(c => c.id));
+            const existingIds = new Set((existingNext || []).map(r => r.challenge_id));
+            const rows = nextChallenges
+              .filter(c => !existingIds.has(c.id))
+              .map(c => ({
+                user_id: user.id,
+                challenge_id: c.id,
+                status: c.isBoss ? 'locked' : 'available',
+              }));
+            if (rows.length) await supabase.from('challenge_progress').insert(rows);
           }
         }
 

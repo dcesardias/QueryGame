@@ -350,11 +350,11 @@ export const challenges: Challenge[] = [
     xpReward: 50,
     concept: 'HAVING',
     initialCode: '-- Cidades com mais de 2 crimes\n',
-    expectedResultCheck: 'SELECT city, COUNT(*) as total FROM crimes GROUP BY city HAVING total > 2',
+    expectedResultCheck: 'SELECT city, COUNT(*) as total FROM crimes GROUP BY city HAVING COUNT(*) > 2',
     hints: [
       'HAVING filtra DEPOIS do GROUP BY (WHERE filtra antes)',
       'GROUP BY city HAVING COUNT(*) > 2',
-      'SELECT city, COUNT(*) as total FROM crimes GROUP BY city HAVING total > 2',
+      'SELECT city, COUNT(*) as total FROM crimes GROUP BY city HAVING COUNT(*) > 2',
     ],
     isBoss: false,
     setupSql: '',
@@ -363,24 +363,27 @@ export const challenges: Challenge[] = [
   {
     id: '2-7',
     title: 'Relatório Formatado',
-    description: 'Liste os tipos de crime com aliases claros para um relatório.',
-    briefing: 'O relatório precisa ser legível. Use nomes descritivos nas colunas.',
+    description: 'Para cada tipo de crime, mostre a quantidade e o prejuízo total. Nomeie as colunas exatamente como: tipo_crime, quantidade e prejuizo_total.',
+    briefing: 'O relatório precisa ser legível. Por padrão, COUNT(*) vira uma coluna com nome feio como "COUNT(*)". Use AS para dar um apelido (alias) a cada coluna. Aqui a banca confere os nomes — use exatamente os pedidos.',
     level: 2,
     category: 'aggregation',
     type: 'write',
     difficulty: 3,
     xpReward: 50,
     concept: 'ALIASES',
-    initialCode: '-- Relatório com aliases\n',
+    initialCode: '-- Relatório com aliases — nomeie as colunas:\n-- tipo_crime, quantidade, prejuizo_total\n',
     expectedResultCheck: "SELECT type AS tipo_crime, COUNT(*) AS quantidade, SUM(financial_loss) AS prejuizo_total FROM crimes GROUP BY type",
     hints: [
-      'Use AS para criar aliases (apelidos) para colunas',
-      'SELECT coluna AS apelido',
-      'Combine COUNT e SUM com aliases descritivos',
+      'Use AS para dar um apelido a uma coluna: SELECT coluna AS apelido',
+      'type AS tipo_crime, COUNT(*) AS quantidade, SUM(financial_loss) AS prejuizo_total',
+      "SELECT type AS tipo_crime, COUNT(*) AS quantidade, SUM(financial_loss) AS prejuizo_total FROM crimes GROUP BY type",
     ],
     isBoss: false,
     setupSql: '',
     sampleDbKey: 'investigation',
+    // Este é O desafio que ensina aliases, e o enunciado especifica os nomes:
+    // aqui é justo (e necessário) conferir os nomes das colunas.
+    enforceColumnNames: true,
   },
   {
     id: '2-8',
@@ -455,7 +458,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-1',
     title: 'Conexão Suspeito-Crime',
-    description: 'Liste suspeitos com seus crimes vinculados usando INNER JOIN.',
+    description: 'Usando INNER JOIN, mostre o nome do suspeito, o tipo e a descrição do crime vinculado a ele (3 colunas).',
     briefing: 'Precisamos cruzar dados: quais suspeitos estão ligados a quais crimes?',
     level: 3,
     category: 'joins',
@@ -477,7 +480,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-2',
     title: 'Todos os Suspeitos',
-    description: 'Liste TODOS os suspeitos, mesmo os que não têm crimes vinculados.',
+    description: 'Liste TODOS os suspeitos (mesmo sem crime vinculado), mostrando nome e cidade do suspeito e o tipo do crime (3 colunas). Sem crime, o tipo vem como NULL.',
     briefing: 'Alguns suspeitos podem estar limpos. Liste todos, mostrando crimes quando houver.',
     level: 3,
     category: 'joins',
@@ -499,7 +502,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-3',
     title: 'Inocentes',
-    description: 'Encontre suspeitos que NÃO estão vinculados a nenhum crime.',
+    description: 'Encontre suspeitos que NÃO estão vinculados a nenhum crime. Mostre nome e cidade (2 colunas).',
     briefing: 'Quem está limpo? Identifique suspeitos sem nenhuma vinculação criminal.',
     level: 3,
     category: 'joins',
@@ -521,7 +524,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-4',
     title: 'Caso Completo',
-    description: 'Liste crimes com seus suspeitos e as evidências encontradas.',
+    description: 'Para cada crime, mostre: tipo e descrição do crime, nome do suspeito, e tipo e descrição da evidência (5 colunas). Use LEFT JOIN para não perder crimes sem suspeito ou sem evidência.',
     briefing: 'Visão completa: para cada crime, mostre suspeitos envolvidos e evidências coletadas.',
     level: 3,
     category: 'joins',
@@ -543,7 +546,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-5',
     title: 'Rede de Contatos',
-    description: 'Encontre pares de suspeitos que participaram do mesmo crime.',
+    description: 'Encontre pares de suspeitos que participaram do mesmo crime. Mostre o nome do primeiro suspeito, o nome do segundo e o tipo do crime (3 colunas).',
     briefing: 'Mapeie a rede: quais suspeitos estão conectados por participarem dos mesmos crimes?',
     level: 3,
     category: 'joins',
@@ -565,7 +568,7 @@ export const challenges: Challenge[] = [
   {
     id: '3-6',
     title: 'Ranking de Envolvimento',
-    description: 'Conte quantos crimes cada suspeito está envolvido, ordenado do mais envolvido.',
+    description: 'Conte em quantos crimes cada suspeito está envolvido. Mostre o nome e o total de crimes (2 colunas), do mais envolvido para o menos.',
     briefing: 'Quem é o mais ativo? Ranking de suspeitos por número de crimes vinculados.',
     level: 3,
     category: 'joins',
@@ -596,7 +599,7 @@ export const challenges: Challenge[] = [
     xpReward: 50,
     concept: 'JOIN_FILTER',
     initialCode: '-- Detetives sobrecarregados\n',
-    expectedResultCheck: "SELECT d.name, d.rank, COUNT(ca.crime_id) as total_cases FROM detectives d INNER JOIN case_assignments ca ON d.id = ca.detective_id GROUP BY d.id, d.name, d.rank HAVING total_cases > 1 ORDER BY total_cases DESC",
+    expectedResultCheck: "SELECT d.name, d.rank, COUNT(ca.crime_id) as total_cases FROM detectives d INNER JOIN case_assignments ca ON d.id = ca.detective_id GROUP BY d.id, d.name, d.rank HAVING COUNT(ca.crime_id) > 1 ORDER BY total_cases DESC",
     hints: [
       'JOIN detectives com case_assignments',
       'GROUP BY + HAVING para filtrar quem tem mais de 1',
@@ -741,6 +744,9 @@ export const challenges: Challenge[] = [
     isBoss: false,
     setupSql: '',
     sampleDbKey: 'investigation',
+    // O ORDER BY está dentro do OVER (define a numeração), não na query final:
+    // a ordem das linhas em si não é o que está sendo cobrado.
+    orderMatters: false,
   },
   {
     id: '4-6',
@@ -763,6 +769,8 @@ export const challenges: Challenge[] = [
     isBoss: false,
     setupSql: '',
     sampleDbKey: 'investigation',
+    // ORDER BY dentro do OVER define o ranking; a ordem das linhas não é cobrada.
+    orderMatters: false,
   },
   {
     id: '4-7',

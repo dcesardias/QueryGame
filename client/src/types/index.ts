@@ -40,6 +40,20 @@ export interface Challenge {
   isBoss: boolean;
   setupSql: string;
   sampleDbKey: string;
+  /**
+   * Quando true, a ordem das linhas faz parte da resposta (ex.: "top 5",
+   * rankings, "ordene por..."). Quando ausente, a ordem é inferida da query
+   * de gabarito (se ela tem ORDER BY no resultado final). Default: ordem
+   * irrelevante — o corretor ordena os dois lados antes de comparar.
+   */
+  orderMatters?: boolean;
+  /**
+   * Quando true, o corretor exige que os nomes/aliases das colunas batam com
+   * o gabarito. Só deve ser usado em desafios cujo enunciado especifica os
+   * nomes esperados (ex.: o desafio que ensina ALIASES). Default: false — o
+   * corretor compara os dados, ignorando os nomes das colunas.
+   */
+  enforceColumnNames?: boolean;
 }
 
 export type ChallengeCategory =

@@ -59,7 +59,8 @@ export function executeQuery(sql: string): QueryResult {
 export function compareResults(
   actual: QueryResult,
   expected: QueryResult,
-  checkOrder: boolean
+  checkOrder: boolean,
+  enforceColumnNames: boolean = false
 ): { correct: boolean; feedback: string; feedbackType: string } {
   if (actual.error) {
     return {
@@ -69,24 +70,30 @@ export function compareResults(
     };
   }
 
-  // Check columns
+  // Check the NUMBER of columns — selecting columns a mais/a menos é um erro real
+  // de projeção e deve ser sinalizado.
   if (actual.columns.length !== expected.columns.length) {
     return {
       correct: false,
-      feedback: `Número de colunas diferente. Esperado: ${expected.columns.length}, Obtido: ${actual.columns.length}. Confira seu SELECT.`,
+      feedback: `Número de colunas diferente. Esperado: ${expected.columns.length}, obtido: ${actual.columns.length}. Confira quais colunas você colocou no SELECT.`,
       feedbackType: 'wrong_columns',
     };
   }
 
-  const expectedColsLower = expected.columns.map(c => c.toLowerCase());
-  const actualColsLower = actual.columns.map(c => c.toLowerCase());
-  for (let i = 0; i < expectedColsLower.length; i++) {
-    if (expectedColsLower[i] !== actualColsLower[i]) {
-      return {
-        correct: false,
-        feedback: `Coluna "${actual.columns[i]}" não era esperada na posição ${i + 1}. Esperado: "${expected.columns[i]}".`,
-        feedbackType: 'wrong_columns',
-      };
+  // O NOME da coluna só é exigido em desafios que ensinam apelidos (AS) e que
+  // dizem no enunciado qual nome usar. Em todo o resto, comparamos os DADOS:
+  // `COUNT(*)` e `COUNT(*) AS total` devem ser aceitos igualmente.
+  if (enforceColumnNames) {
+    const expectedColsLower = expected.columns.map(c => c.toLowerCase());
+    const actualColsLower = actual.columns.map(c => c.toLowerCase());
+    for (let i = 0; i < expectedColsLower.length; i++) {
+      if (expectedColsLower[i] !== actualColsLower[i]) {
+        return {
+          correct: false,
+          feedback: `O nome da coluna na posição ${i + 1} não confere. Esperado: "${expected.columns[i]}", obtido: "${actual.columns[i]}". Use AS para nomear a coluna como pedido no enunciado.`,
+          feedbackType: 'wrong_columns',
+        };
+      }
     }
   }
 

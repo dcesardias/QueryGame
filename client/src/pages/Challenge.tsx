@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getChallengeById } from '../data/challenges';
+import { getLesson } from '../data/lessons';
 import { INVESTIGATION_DB_SQL } from '../data/sampleDb';
 import { ensureReady, createDatabase, executeQuery, compareResults } from '../services/sqlEngine';
 import { useGameStore } from '../store/gameStore';
@@ -13,7 +14,7 @@ import { difficultyToPips } from '../types';
 import type { QueryResult } from '../types';
 import {
   Play, ArrowLeft, Lightbulb, CheckCircle, XCircle,
-  Clock, RotateCcw, ArrowRight, Search,
+  Clock, RotateCcw, ArrowRight, Search, GraduationCap,
 } from 'lucide-react';
 
 export default function ChallengePage() {
@@ -26,7 +27,7 @@ export default function ChallengePage() {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [expectedResult, setExpectedResult] = useState<QueryResult | null>(null);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
-  const [hintIndex, setHintIndex] = useState(-1);
+  const [hintIndex, setHintIndex] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [solved, setSolved] = useState(false);
@@ -46,7 +47,7 @@ export default function ChallengePage() {
     setResult(null);
     setExpectedResult(null);
     setFeedback(null);
-    setHintIndex(-1);
+    setHintIndex(0);
     setAttempts(0);
     setFailedAttempts(0);
     setSolved(challengeProgress[challenge.id]?.status === 'completed');
@@ -120,9 +121,18 @@ export default function ChallengePage() {
         return;
       }
 
-      const checkOrder = code.toLowerCase().includes('order by') ||
-                         challenge.expectedResultCheck?.toLowerCase().includes('order by');
-      const comparison = compareResults(userResult, expectedResult, !!checkOrder);
+      // A ordem das linhas só importa quando o desafio diz que importa
+      // (orderMatters) ou, na ausência da flag, quando o GABARITO ordena o
+      // resultado final. Nunca inferimos da query do aluno: adicionar um
+      // ORDER BY inofensivo não deve reprovar uma resposta correta.
+      const checkOrder = challenge.orderMatters ??
+        !!challenge.expectedResultCheck?.toLowerCase().includes('order by');
+      const comparison = compareResults(
+        userResult,
+        expectedResult,
+        checkOrder,
+        !!challenge.enforceColumnNames,
+      );
 
       setFeedback({ type: comparison.feedbackType, message: comparison.feedback });
       setAttempts(prev => prev + 1);
@@ -143,10 +153,9 @@ export default function ChallengePage() {
         setFailedAttempts(newFailed);
         submitChallenge(challenge.id, false, 0, challenge.concept);
 
-        // Auto-show hint after 3 failed attempts
-        if (newFailed >= 3 && hintIndex < 0) {
-          setHintIndex(0);
-        }
+        // Scaffolding progressivo: a cada erro, revela mais uma pista
+        // (a primeira — o conceito — já está visível desde o início).
+        setHintIndex(prev => Math.min(prev + 1, challenge.hints.length - 1));
       }
     } catch (err) {
       console.error('Run error:', err);
@@ -182,6 +191,7 @@ export default function ChallengePage() {
 
   const feedbackOk = feedback?.type === 'correct';
   const feedbackColor = feedbackOk ? 'var(--sage)' : 'var(--oxblood)';
+  const lesson = getLesson(challenge.concept);
 
   return (
     <div className="mx-auto max-w-[1180px]">
@@ -234,6 +244,33 @@ export default function ChallengePage() {
         >
           {/* LEFT — dossier */}
           <div className="flex flex-col gap-4">
+            {/* Conceito — mini-lição (ensina ANTES de tentar) */}
+            {lesson && (
+              <div className="card border-l-[3px] border-l-brass">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <GraduationCap size={16} className="text-brass" />
+                  <span className="eyebrow">Conceito · {lesson.title}</span>
+                </div>
+                <p className="text-ink text-[14px] leading-relaxed m-0">{lesson.summary}</p>
+                {lesson.syntax && (
+                  <div className="mt-3">
+                    <div className="kicker mb-1">Sintaxe</div>
+                    <p className="mono text-[12.5px] text-brass-bright bg-bg-deep border border-line rounded px-3 py-1.5 m-0 overflow-x-auto">
+                      {lesson.syntax}
+                    </p>
+                  </div>
+                )}
+                {lesson.example && (
+                  <div className="mt-2.5">
+                    <div className="kicker mb-1">Exemplo</div>
+                    <p className="mono text-[12.5px] text-ink-2 bg-bg-deep border border-line rounded px-3 py-1.5 m-0 overflow-x-auto">
+                      {lesson.example}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Briefing */}
             <div className="card">
               <div className="eyebrow mb-2.5">Briefing do caso</div>
@@ -249,26 +286,24 @@ export default function ChallengePage() {
                   <Lightbulb size={16} className="text-brass" />
                   <span className="eyebrow">Linha de raciocínio</span>
                 </div>
-                {failedAttempts >= 3 && hintIndex < challenge.hints.length - 1 && (
+                {hintIndex < challenge.hints.length - 1 && (
                   <button onClick={showNextHint} className="btn-secondary btn-sm">
-                    {hintIndex < 0 ? 'Pedir dica' : 'Próxima'}
+                    Próxima dica
                   </button>
                 )}
               </div>
-              {hintIndex >= 0 ? (
-                <div className="flex flex-col gap-2.5">
-                  {challenge.hints.slice(0, hintIndex + 1).map((hint, i) => (
-                    <div key={i} className="fade-up flex items-start gap-2.5 text-[13.5px] text-ink-2 leading-relaxed">
-                      <span className="mono brass shrink-0">{i + 1}.</span>
-                      <span>{hint}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="faint text-[13px] m-0 leading-relaxed">
-                  {failedAttempts < 3
-                    ? `Tente primeiro por conta própria — uma dica é liberada após ${3 - failedAttempts} erro${3 - failedAttempts !== 1 ? 's' : ''}.`
-                    : 'Clique em "Pedir dica" para uma pista.'}
+              <div className="flex flex-col gap-2.5">
+                {challenge.hints.slice(0, hintIndex + 1).map((hint, i) => (
+                  <div key={i} className="fade-up flex items-start gap-2.5 text-[13.5px] text-ink-2 leading-relaxed">
+                    <span className="mono brass shrink-0">{i + 1}.</span>
+                    <span>{hint}</span>
+                  </div>
+                ))}
+              </div>
+              {hintIndex < challenge.hints.length - 1 && (
+                <p className="faint text-[12px] m-0 mt-3 leading-relaxed">
+                  Tente resolver com a pista acima. Mais pistas aparecem a cada
+                  tentativa — ou clique em "Próxima dica".
                 </p>
               )}
             </div>
