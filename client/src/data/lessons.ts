@@ -2,6 +2,10 @@
 // Chave = campo `concept` do desafio (challenges.ts).
 // O objetivo é ENSINAR o conceito ANTES de o aluno tentar — sem depender de
 // errar para liberar dica. Mantenha cada lição curta: definição + sintaxe + 1 exemplo.
+//
+// IMPORTANTE: o `example` deve ilustrar o conceito em um caso DIFERENTE do
+// gabarito do desafio — NUNCA a resposta exata. Use outra tabela/coluna/valor,
+// para o aluno transferir o padrão (e adaptar), não copiar-colar-rodar.
 
 export interface Lesson {
   /** Nome amigável do conceito. */
@@ -10,7 +14,7 @@ export interface Lesson {
   summary: string;
   /** Padrão de sintaxe genérico. */
   syntax?: string;
-  /** Exemplo concreto usando o banco da investigação. */
+  /** Exemplo concreto — num caso DIFERENTE do desafio (não é a resposta). */
   example?: string;
 }
 
@@ -20,55 +24,55 @@ export const lessons: Record<string, Lesson> = {
     title: 'SELECT — ler dados',
     summary: 'O SELECT pede dados a uma tabela e o FROM diz de qual tabela. O asterisco (*) traz todas as colunas.',
     syntax: 'SELECT * FROM tabela',
-    example: 'SELECT * FROM suspects',
+    example: 'SELECT * FROM detectives',
   },
   WHERE_BASIC: {
     title: 'WHERE — filtrar linhas',
     summary: 'O WHERE mantém só as linhas que satisfazem a condição. Texto sempre entre aspas simples.',
     syntax: "SELECT * FROM tabela WHERE coluna = 'valor'",
-    example: "SELECT * FROM suspects WHERE city = 'São Paulo'",
+    example: "SELECT * FROM crimes WHERE city = 'Curitiba'",
   },
   WHERE_BETWEEN: {
     title: 'BETWEEN — intervalos',
     summary: 'BETWEEN testa se um valor está dentro de um intervalo, incluindo os dois extremos.',
     syntax: 'WHERE coluna BETWEEN menor AND maior',
-    example: 'SELECT * FROM suspects WHERE age BETWEEN 30 AND 40',
+    example: 'SELECT * FROM crimes WHERE financial_loss BETWEEN 50000 AND 100000',
   },
   WHERE_LIKE: {
     title: 'LIKE — busca por padrão',
     summary: 'LIKE compara texto por padrão. O % representa "qualquer sequência de caracteres".',
     syntax: "WHERE coluna LIKE '%trecho%'",
-    example: "SELECT * FROM suspects WHERE name LIKE '%Silva%'",
+    example: "SELECT * FROM crimes WHERE description LIKE '%digital%'",
   },
   ORDER_BY: {
     title: 'ORDER BY — ordenar',
     summary: 'Ordena o resultado por uma coluna. ASC é crescente (padrão); DESC é decrescente.',
     syntax: 'SELECT * FROM tabela ORDER BY coluna DESC',
-    example: 'SELECT * FROM evidence ORDER BY found_at DESC',
+    example: 'SELECT * FROM suspects ORDER BY age ASC',
   },
   LIMIT: {
     title: 'LIMIT — limitar linhas',
     summary: 'LIMIT corta o resultado às N primeiras linhas. Combinado com ORDER BY, dá o "top N".',
     syntax: 'SELECT * FROM tabela ORDER BY coluna DESC LIMIT N',
-    example: 'SELECT * FROM crimes ORDER BY financial_loss DESC LIMIT 5',
+    example: 'SELECT * FROM detectives ORDER BY cases_solved DESC LIMIT 3',
   },
   NULL_HANDLING: {
     title: 'NULL — dados ausentes',
     summary: 'NULL significa "sem valor". Para testá-lo use IS NULL ou IS NOT NULL — nunca = NULL.',
     syntax: 'WHERE coluna IS NULL',
-    example: 'SELECT * FROM suspects WHERE age IS NULL',
+    example: 'SELECT * FROM suspects WHERE occupation IS NULL',
   },
   WHERE_AND_OR: {
     title: 'AND / OR — combinar condições',
     summary: 'AND exige que todas as condições sejam verdadeiras; OR exige ao menos uma. Use parênteses para deixar a lógica clara.',
     syntax: "WHERE cond1 AND (cond2 OR cond3)",
-    example: "SELECT * FROM suspects WHERE city = 'São Paulo' AND criminal_record > 0",
+    example: "SELECT * FROM crimes WHERE city = 'São Paulo' AND solved = 0",
   },
   SELECT_COLUMNS: {
     title: 'Projeção — escolher colunas',
     summary: 'Em vez de *, liste as colunas desejadas separadas por vírgula, na ordem que quiser.',
     syntax: 'SELECT col1, col2, col3 FROM tabela',
-    example: 'SELECT name, city, occupation FROM suspects',
+    example: 'SELECT type, city, financial_loss FROM crimes',
   },
   FUNDAMENTALS_BOSS: {
     title: 'Revisão — fundamentos',
@@ -81,55 +85,55 @@ export const lessons: Record<string, Lesson> = {
     title: 'GROUP BY + COUNT — contar por grupo',
     summary: 'GROUP BY junta linhas iguais em grupos; as funções de agregação resumem cada grupo. COUNT(*) conta linhas.',
     syntax: 'SELECT coluna, COUNT(*) FROM tabela GROUP BY coluna',
-    example: 'SELECT type, COUNT(*) FROM crimes GROUP BY type',
+    example: 'SELECT city, COUNT(*) FROM suspects GROUP BY city',
   },
   SUM: {
     title: 'SUM — somar',
     summary: 'SUM soma todos os valores de uma coluna numérica.',
     syntax: 'SELECT SUM(coluna) FROM tabela',
-    example: 'SELECT SUM(financial_loss) FROM crimes',
+    example: 'SELECT SUM(cases_solved) FROM detectives',
   },
   AVG: {
     title: 'AVG — média',
     summary: 'AVG calcula a média de uma coluna numérica. Valores NULL são ignorados no cálculo.',
     syntax: 'SELECT AVG(coluna) FROM tabela',
-    example: 'SELECT AVG(age) FROM suspects',
+    example: 'SELECT AVG(financial_loss) FROM crimes',
   },
   COUNT_ORDER_LIMIT: {
     title: 'Agregar + ordenar + LIMIT',
     summary: 'Conte por grupo, ordene pela contagem e use LIMIT 1 para achar o maior grupo.',
     syntax: 'SELECT col, COUNT(*) FROM t GROUP BY col ORDER BY COUNT(*) DESC LIMIT 1',
-    example: 'SELECT city, COUNT(*) FROM crimes GROUP BY city ORDER BY COUNT(*) DESC LIMIT 1',
+    example: 'SELECT occupation, COUNT(*) FROM suspects GROUP BY occupation ORDER BY COUNT(*) DESC LIMIT 1',
   },
   DISTINCT: {
     title: 'DISTINCT — valores únicos',
     summary: 'DISTINCT remove as linhas duplicadas, deixando apenas os valores distintos.',
     syntax: 'SELECT DISTINCT coluna FROM tabela',
-    example: 'SELECT DISTINCT type FROM crimes',
+    example: 'SELECT DISTINCT city FROM suspects',
   },
   HAVING: {
     title: 'HAVING — filtrar grupos',
     summary: 'WHERE filtra linhas ANTES de agrupar; HAVING filtra os GRUPOS DEPOIS do GROUP BY, usando agregações.',
     syntax: 'GROUP BY coluna HAVING COUNT(*) > N',
-    example: 'SELECT city, COUNT(*) FROM crimes GROUP BY city HAVING COUNT(*) > 2',
+    example: 'SELECT type, COUNT(*) FROM crimes GROUP BY type HAVING COUNT(*) >= 2',
   },
   ALIASES: {
     title: 'AS — apelidos de coluna',
     summary: 'Sem apelido, COUNT(*) vira uma coluna chamada "COUNT(*)". O AS dá um nome legível ao resultado.',
     syntax: 'SELECT coluna AS apelido, COUNT(*) AS total FROM tabela',
-    example: 'SELECT type AS tipo, COUNT(*) AS quantidade FROM crimes GROUP BY type',
+    example: 'SELECT city AS cidade, COUNT(*) AS qtd_suspeitos FROM suspects GROUP BY city',
   },
   MULTI_AGG: {
     title: 'Várias agregações juntas',
     summary: 'Você pode usar COUNT, SUM, AVG, MIN e MAX no mesmo SELECT para um resumo completo de cada grupo.',
     syntax: 'SELECT col, COUNT(*), AVG(x), MAX(x) FROM t GROUP BY col',
-    example: 'SELECT type, COUNT(*), AVG(financial_loss), MAX(financial_loss) FROM crimes GROUP BY type',
+    example: 'SELECT city, COUNT(*), MIN(age), MAX(age) FROM suspects GROUP BY city',
   },
   MULTI_GROUP: {
     title: 'GROUP BY com várias colunas',
     summary: 'Agrupar por mais de uma coluna cria um grupo para cada combinação distinta de valores.',
     syntax: 'SELECT col1, col2, COUNT(*) FROM t GROUP BY col1, col2',
-    example: 'SELECT city, occupation, COUNT(*) FROM suspects GROUP BY city, occupation',
+    example: 'SELECT type, city, COUNT(*) FROM crimes GROUP BY type, city',
   },
   AGGREGATION_BOSS: {
     title: 'Revisão — agregação',
@@ -142,43 +146,43 @@ export const lessons: Record<string, Lesson> = {
     title: 'INNER JOIN — conectar tabelas',
     summary: 'Combina linhas de duas tabelas onde a condição ON casa. Só aparecem pares que existem nos dois lados.',
     syntax: 'SELECT ... FROM a INNER JOIN b ON a.id = b.a_id',
-    example: 'SELECT s.name, c.type FROM suspects s INNER JOIN suspect_crimes sc ON s.id = sc.suspect_id INNER JOIN crimes c ON sc.crime_id = c.id',
+    example: 'SELECT c.type, e.description FROM crimes c INNER JOIN evidence e ON c.id = e.crime_id',
   },
   LEFT_JOIN: {
     title: 'LEFT JOIN — manter a esquerda',
     summary: 'Mantém TODAS as linhas da tabela à esquerda. Quando não há par à direita, essas colunas vêm como NULL.',
     syntax: 'SELECT ... FROM a LEFT JOIN b ON a.id = b.a_id',
-    example: 'SELECT s.name, c.type FROM suspects s LEFT JOIN suspect_crimes sc ON s.id = sc.suspect_id LEFT JOIN crimes c ON sc.crime_id = c.id',
+    example: 'SELECT c.type, e.description FROM crimes c LEFT JOIN evidence e ON c.id = e.crime_id',
   },
   ANTI_JOIN: {
     title: 'Anti-join — sem correspondência',
     summary: 'Um LEFT JOIN seguido de WHERE chave_da_direita IS NULL devolve as linhas da esquerda que NÃO têm par à direita.',
     syntax: 'FROM a LEFT JOIN b ON a.id = b.a_id WHERE b.a_id IS NULL',
-    example: 'SELECT s.name FROM suspects s LEFT JOIN suspect_crimes sc ON s.id = sc.suspect_id WHERE sc.suspect_id IS NULL',
+    example: 'SELECT d.name FROM detectives d LEFT JOIN case_assignments ca ON d.id = ca.detective_id WHERE ca.detective_id IS NULL',
   },
   MULTI_JOIN: {
     title: 'Vários JOINs encadeados',
     summary: 'Encadeie vários JOIN para conectar 3 ou mais tabelas. Use aliases (AS) para diferenciar colunas de mesmo nome.',
     syntax: 'FROM a JOIN b ON ... JOIN c ON ...',
-    example: 'SELECT c.type, s.name, e.description FROM crimes c LEFT JOIN suspect_crimes sc ON c.id = sc.crime_id LEFT JOIN suspects s ON sc.suspect_id = s.id LEFT JOIN evidence e ON c.id = e.crime_id',
+    example: 'SELECT d.name, c.type FROM detectives d JOIN case_assignments ca ON d.id = ca.detective_id JOIN crimes c ON ca.crime_id = c.id',
   },
   SELF_JOIN: {
     title: 'Self join — tabela com ela mesma',
-    summary: 'Junte uma tabela a ela mesma com aliases diferentes para comparar linhas entre si (ex.: pares no mesmo crime).',
+    summary: 'Junte uma tabela a ela mesma com aliases diferentes para comparar linhas entre si (ex.: pares na mesma cidade).',
     syntax: 'FROM t x JOIN t y ON x.chave = y.chave AND x.id < y.id',
-    example: 'FROM suspect_crimes sc1 JOIN suspect_crimes sc2 ON sc1.crime_id = sc2.crime_id AND sc1.suspect_id < sc2.suspect_id',
+    example: 'SELECT a.name, b.name FROM suspects a JOIN suspects b ON a.city = b.city AND a.id < b.id',
   },
   JOIN_AGG: {
     title: 'JOIN + agregação',
-    summary: 'Depois de juntar tabelas, agrupe e conte para resumir relacionados por grupo (ex.: crimes por suspeito).',
+    summary: 'Depois de juntar tabelas, agrupe e conte para resumir relacionados por grupo (ex.: evidências por crime).',
     syntax: 'FROM a JOIN b ON ... GROUP BY a.id ORDER BY COUNT(*) DESC',
-    example: 'SELECT s.name, COUNT(sc.crime_id) FROM suspects s JOIN suspect_crimes sc ON s.id = sc.suspect_id GROUP BY s.id, s.name',
+    example: 'SELECT c.type, COUNT(e.id) FROM crimes c JOIN evidence e ON c.id = e.crime_id GROUP BY c.id, c.type',
   },
   JOIN_FILTER: {
     title: 'JOIN + GROUP BY + HAVING',
     summary: 'Junte, agrupe e use HAVING para manter só os grupos que passam de um limite.',
     syntax: 'FROM a JOIN b ON ... GROUP BY a.id HAVING COUNT(*) > N',
-    example: 'SELECT d.name, COUNT(ca.crime_id) FROM detectives d JOIN case_assignments ca ON d.id = ca.detective_id GROUP BY d.id, d.name HAVING COUNT(ca.crime_id) > 1',
+    example: 'SELECT c.type, COUNT(e.id) FROM crimes c JOIN evidence e ON c.id = e.crime_id GROUP BY c.id, c.type HAVING COUNT(e.id) > 1',
   },
   JOINS_BOSS: {
     title: 'Revisão — JOINs',
@@ -191,43 +195,43 @@ export const lessons: Record<string, Lesson> = {
     title: 'Subquery escalar',
     summary: 'Uma consulta entre parênteses que devolve um único valor pode ser usada dentro do WHERE para comparar.',
     syntax: 'WHERE coluna > (SELECT AVG(coluna) FROM tabela)',
-    example: 'SELECT * FROM crimes WHERE financial_loss > (SELECT AVG(financial_loss) FROM crimes)',
+    example: 'SELECT * FROM suspects WHERE age > (SELECT AVG(age) FROM suspects)',
   },
   SUBQUERY_IN: {
     title: 'Subquery com IN',
     summary: 'Uma subconsulta pode devolver uma lista de valores; IN (...) testa se a coluna está nessa lista.',
     syntax: 'WHERE coluna IN (SELECT coluna FROM outra WHERE ...)',
-    example: "SELECT DISTINCT city FROM suspects WHERE id IN (SELECT suspect_id FROM suspect_crimes WHERE role = 'mastermind')",
+    example: 'SELECT name FROM detectives WHERE id IN (SELECT detective_id FROM case_assignments)',
   },
   CTE_BASIC: {
     title: 'CTE (WITH) — tabela temporária',
     summary: 'WITH nome AS (...) cria uma "tabela temporária" nomeada para organizar a consulta e depois usá-la no SELECT principal.',
     syntax: 'WITH nome AS (SELECT ...) SELECT * FROM nome WHERE ...',
-    example: 'WITH city_stats AS (SELECT city, SUM(financial_loss) AS total FROM crimes GROUP BY city) SELECT * FROM city_stats WHERE total > 100000',
+    example: 'WITH por_cidade AS (SELECT city, COUNT(*) AS n FROM suspects GROUP BY city) SELECT * FROM por_cidade WHERE n > 2',
   },
   CTE_MULTI: {
     title: 'Várias CTEs',
     summary: 'Separe múltiplas CTEs por vírgula. Uma CTE pode referenciar outra definida antes dela.',
     syntax: 'WITH a AS (...), b AS (SELECT * FROM a ...) SELECT * FROM b',
-    example: 'WITH crime_types AS (SELECT type, SUM(financial_loss) AS loss FROM crimes GROUP BY type), top_type AS (SELECT * FROM crime_types ORDER BY loss DESC LIMIT 1) SELECT * FROM top_type',
+    example: 'WITH por_cidade AS (SELECT city, COUNT(*) AS n FROM crimes GROUP BY city), maior AS (SELECT * FROM por_cidade ORDER BY n DESC LIMIT 1) SELECT * FROM maior',
   },
   WINDOW_ROW_NUMBER: {
     title: 'ROW_NUMBER() — numerar',
     summary: 'Função de janela que numera as linhas em sequência segundo uma ordenação, sem agrupar (mantém todas as linhas).',
     syntax: 'ROW_NUMBER() OVER (ORDER BY coluna DESC)',
-    example: 'SELECT name, ROW_NUMBER() OVER (ORDER BY cases_solved DESC) AS posicao FROM detectives',
+    example: 'SELECT name, ROW_NUMBER() OVER (ORDER BY age DESC) AS pos FROM suspects',
   },
   WINDOW_RANK: {
     title: 'RANK() — ranking com empates',
     summary: 'RANK() dá a mesma posição a empates e pula números (1,1,3). DENSE_RANK() não pula (1,1,2).',
     syntax: 'RANK() OVER (ORDER BY ... DESC)',
-    example: 'SELECT city, COUNT(*) AS total, RANK() OVER (ORDER BY COUNT(*) DESC) AS pos FROM crimes GROUP BY city',
+    example: 'SELECT type, COUNT(*) AS n, RANK() OVER (ORDER BY COUNT(*) DESC) AS pos FROM crimes GROUP BY type',
   },
   WINDOW_LAG: {
     title: 'LAG() / LEAD() — linha vizinha',
     summary: 'LAG(coluna) acessa o valor da linha anterior segundo a ordenação; LEAD(coluna) acessa a próxima.',
     syntax: 'LAG(coluna) OVER (ORDER BY data)',
-    example: 'SELECT type, date, LAG(financial_loss) OVER (ORDER BY date) AS anterior FROM crimes ORDER BY date',
+    example: 'SELECT name, cases_solved, LAG(cases_solved) OVER (ORDER BY hire_date) AS anterior FROM detectives',
   },
   ADVANCED_BOSS: {
     title: 'Revisão — avançado',
